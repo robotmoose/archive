@@ -19,6 +19,7 @@
 		"storage",
 		"audioCapture",
 		"videoCapture",
+		"fullscreen",
 		"webview"
 	],
 	"app":

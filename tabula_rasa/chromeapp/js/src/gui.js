@@ -6,6 +6,8 @@ function gui_t(div)
 	this.main_div=document.createElement("div");
 	maximize(this.main_div);
 
+	var _this=this;
+
 	this.gruveo_div=document.createElement("div");
 	maximize(this.gruveo_div);
 	this.gruveo_div.style.overflow="hidden";
@@ -13,7 +15,7 @@ function gui_t(div)
 	this.gruveo_div.appendChild(gruveo);
 	this.gruveo.addEventListener('permissionrequest',function(evt)
 	{
-		if(evt.permission==='media')
+		if(evt.permission==='media'|| evt.permission==="fullscreen")
 			evt.request.allow();
 	});
 
@@ -66,8 +68,34 @@ function gui_t(div)
 				_this.name.get_robot().year!=null);
 		}
 	);
-	this.status_viewer=new status_viewer_t(this.main_div);
 
+	this.is_fullscreen=false;
+	this.status_viewer=new status_viewer_t(this.main_div);
+	this.fullscreen_button=document.createElement("input");
+	this.fullscreen_button.type="button";
+	this.fullscreen_button.value="Fullscreen"
+	this.fullscreen_button.onclick=function()
+	{
+		if(!_this.is_fullscreen)
+		{
+			_this.is_fullscreen=true;
+			document.body.webkitRequestFullscreen();
+		}
+		else
+		{
+			document.webkitExitFullscreen();
+			_this.is_fullscreen=false;
+		}
+			
+
+	}
+	this.fullscreen_button.addEventListener('permissionrequest',function(evt)
+	{
+		if(evt.permission==="fullscreen")
+			evt.request.allow();
+	});
+
+	this.name.el.appendChild(this.fullscreen_button);
 	this.name.el.appendChild(document.createElement("br"));
 
 	this.pilot_checkmark=new checkmark_t(this.name.el);
@@ -84,8 +112,8 @@ function gui_t(div)
 		name:'app_layout',
 		panels:
 		[
-			{type:'left',resizable:true,content:this.gruveo_div,size:"60%"},
-			{type:'main',resizable:true,content:this.name.el,},
+			{type:'left',resizable:true,content:this.gruveo_div,size:"70%"},
+			{type:'main',resizable:true,content:this.name.el},
 			{type:'preview',resizable:true,content:this.status_viewer.el,size:"70%"}
 		]
 	});
