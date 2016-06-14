@@ -92,7 +92,7 @@ void send_json(struct mg_connection *conn,std::string json)
 		"\r\n"
 		"%s",
 		json.size(), json.c_str());
-	
+
 	connection_done(conn);
 }
 
@@ -108,18 +108,18 @@ private:
 	public:
 		// JSON object at this path
 		std::string value;
-		
+
 		// Current client connections waiting for getnext data
 		std::vector<struct mg_connection *> waiting_connections;
-		
+
 		database_entry(void) :value("") {}
 		database_entry(const std::string &newval) :value(newval) {}
 	};
 
 	typedef std::map<std::string /* path */, database_entry> db_t;
 	db_t db;
-	
-	
+
+
 	// Normalize this path name--everything gets one trailing slash
 	std::string path_normalize(std::string path) const {
 		if(path.size()>0&&path[path.size()-1]!='/')
@@ -244,7 +244,7 @@ public:
 			database_entry &e=db[path];
 			if (e.value!=new_value) {
 				e.value=new_value;
-				
+
 				setnext(path,e); // any waiting getnext values
 			}
 		}
@@ -264,7 +264,7 @@ public:
 			return empty;
 		}
 	}
-	
+
 	/**
 	  Get this path's value back to this connection,
 	  after the next value is put in the database.
@@ -276,7 +276,7 @@ public:
 		conn->flags |= MG_F_USER_1; // mark as in use
 		conn->user_data=(void *)&e;
 	}
-	
+
 	// Called by set after the value changes:
 	void setnext(const std::string &path,database_entry &e)
 	{
@@ -291,16 +291,16 @@ public:
 		// Remove them from the list
 		e.waiting_connections.clear();
 	}
-			
+
 	// This connection is shutting down--cancel its getnext
 	bool connection_closing(struct mg_connection *conn) {
 		if ((conn->flags & MG_F_USER_1) && conn->user_data) { // connection is getnext still in progress
   			printf("Closing an in-progress getnext (WEIRD CASE): ");
-  			
+
 			database_entry &e=*(database_entry *)conn->user_data;
-			
+
 			// Check if this is the doomed connection
-			//  (This avoids future sends to the doomed one, 
+			//  (This avoids future sends to the doomed one,
 			//   which would yield a use-after-delete memory corruption)
 			for (unsigned int i=0;i<e.waiting_connections.size();i++) {
 				if (e.waiting_connections[i]==conn) {
@@ -313,7 +313,7 @@ public:
 			printf("no sign of closing getnext (SCARY!)\n");
 			return false;
 		}
-		
+
 		// Fine--not a getnext in progress
 		return true;
 	}
@@ -384,13 +384,34 @@ superstar_db_t superstar_db;
 /**
   Return true if a write to this starpath is allowed.
 */
-bool write_is_authorized(const std::string &starpath,
+bool write_is_authorized(std::string starpath,
 	const std::string &new_data,const std::string &new_auth)
 {
-// Read password from file of passwords
+	//Remove trailing slash (needed for file based auth checking)
+	if(starpath.size()>0&&starpath[starpath.size()-1]=='/')
+		starpath=starpath.substr(0,starpath.size()-1);
+
+	//Try to open auth file
 	std::ifstream f(("auth/"+starpath).c_str());
-	if (!f.good()) return true; // no such auth file exists.
-	std::string pass; std::getline(f,pass);
+
+	//No auth found
+	if(!f.good())
+	{
+		//Remove top level of path
+		std::string new_starpath=starpath;
+		while(new_starpath.size()>0&&new_starpath[new_starpath.size()-1]!='/')
+			new_starpath=new_starpath.substr(0,new_starpath.size()-1);
+
+		//If top level path isn't blank and not the same as the old one, try it's auth
+		if(new_starpath.size()>0&&new_starpath!=starpath)
+			return write_is_authorized(new_starpath,new_data,new_auth);
+
+		//Else no auth, writeable
+		return true;
+	}
+
+	std::string pass;
+	std::getline(f,pass);
 
 // If we get here, there is a password.  Verify there is an authentication code.
 	if (new_auth.size()<=0) return false; // need authentication code
@@ -403,6 +424,20 @@ bool write_is_authorized(const std::string &starpath,
 	std::string should_auth=getAuthCode<SHA256>(alldata);
 	if (should_auth!=new_auth) return false; // authentication mismatch
 	else return true;
+}
+
+//Replace all instances of "find" with "replace" in "str".
+std::string replace_all(std::string str,const std::string& find,const std::string& replace)
+{
+	size_t pos=0;
+
+	while((pos=str.find(find,pos))!=std::string::npos)
+	{
+		str.replace(pos,find.size(),replace);
+		pos+=replace.size();
+	}
+
+	return str;
 }
 
 // This function will be called by mongoose on every new request.
@@ -440,24 +475,28 @@ void superstar_http_handler(struct mg_connection *conn, int ev,void *param) {
   printf("Incoming request: client %s:%s, URI %s\n",remote_ip.c_str(),remote_port.c_str(),mg_str_to_std_string(&m->uri).c_str());
 
   const char *prefix="/superstar/";
-  if (strncmp(m->uri.p,prefix,strlen(prefix))!=0) 
+  if (strncmp(m->uri.p,prefix,strlen(prefix))!=0)
   { // not superstar--serve raw files instead
   	mg_serve_http(conn, m, s_http_server_opts);
   	return;
   }
-  
+
   std::string starpath=mg_str_to_std_string(&m->uri).substr(strlen(prefix));
+
+  //Hacky way to replace multiple slashes with a single slash
+  for(size_t ii=0;ii<starpath.size()/2;++ii)
+	starpath=replace_all(starpath,"//","/");
 
   std::string query=mg_str_to_std_string(&m->query_string);
 
   std::string content="<HTML><BODY>Hello from mongoose!  ";
-  
+
 //  "I see you're using source IP "+remote_ip+" and port "+my_itos(conn->remote_port)+"\n";
   content+="<P>Superstar path: "+starpath+"\n";
 
   enum {NBUF=32767}; // maximum length for JSON data being set
   char buf[NBUF];
-  
+
   if (0<=mg_get_http_var(&m->query_string,"set",buf,NBUF)) { /* writing new value */
   	std::string newval(buf);
   	char sentauth[NBUF];
@@ -499,14 +538,14 @@ void superstar_http_handler(struct mg_connection *conn, int ev,void *param) {
   }
   else { /* Not writing a new value */
   	if (0<=mg_get_http_var(&m->query_string,"getnext",buf,NBUF))
-  	{ /* getting JSON when it next changes (COMET / Hanging Get / "Get on Set") 
+  	{ /* getting JSON when it next changes (COMET / Hanging Get / "Get on Set")
   	     from the given value.  Send current value to avoid update race. */
-  		if (buf!=superstar_db.get(starpath)) 
+  		if (buf!=superstar_db.get(starpath))
   		{ // need new value immediately
   			printf("Sending getnext client immediate data\n");
   			send_json(conn,superstar_db.get(starpath));
-  		} 
-  		else 
+  		}
+  		else
   		{ // wait for new value to arrive
   			printf("Queuing up the getnext client\n");
   			conn->flags |= MG_F_USER_1; // mark as getnext in progress
@@ -568,7 +607,7 @@ void *thread_code(void* data)
 
 	mg_mgr_init(&mgr, NULL);
 	nc = mg_bind(&mgr, ADDRESS.c_str(), superstar_http_handler);
-	
+
 	if (nc==NULL)
 	{
 		std::cout<<"Could not open port "<<ADDRESS<<"."<<std::endl;
@@ -576,17 +615,17 @@ void *thread_code(void* data)
 		std::cout<<"\tIs something already running on that port?"<<std::endl;
 		exit(1);
 	}
-	
+
 	// Set up HTTP server parameters:
 	mg_set_protocol_http_websocket(nc);
 	s_http_server_opts.document_root = "../www";  // Serve current directory
 	s_http_server_opts.enable_directory_listing = "yes";
 	s_http_server_opts.ssi_pattern="**.html$";
-	
+
 	while(true)
 	{
 		mg_mgr_poll(&mgr, 1000);
-	
+
 		if(data!=NULL)
 		{
 			int64_t new_time=millis();
@@ -633,7 +672,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	/* Start threads to be redundant servers.  This seems to do nothing. 
+	/* Start threads to be redundant servers.  This seems to do nothing.
 	for (int thread=0;thread<0;thread++)
 		mg_start_thread(thread_code,NULL);
 	*/
