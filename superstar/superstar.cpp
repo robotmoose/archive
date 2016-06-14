@@ -13,6 +13,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 #include <map>
@@ -56,6 +57,39 @@ static struct mg_serve_http_opts s_http_server_opts;
 inline std::string mg_str_to_std_string(const mg_str *str)
 {
 	return std::string(str->p,str->len);
+}
+
+//Replace all instances of "find" with "replace" in "str".
+std::string replace_all(std::string str,const std::string& find,const std::string& replace)
+{
+	size_t pos=0;
+
+	while((pos=str.find(find,pos))!=std::string::npos)
+	{
+		str.replace(pos,find.size(),replace);
+		pos+=replace.size();
+	}
+
+	return str;
+}
+
+std::string strip_slashes_start(std::string str)
+{
+	while(str.size()>0&&str[0]=='/')
+		str=str.substr(1,str.size());
+	return str;
+}
+
+std::string strip_slashes_end(std::string str)
+{
+	while(str.size()>0&&str[str.size()-1]=='/')
+		str=str.substr(0,str.size()-1);
+	return str;
+}
+
+std::string strip_slashes(std::string str)
+{
+	return strip_slashes_end(strip_slashes_start(str));
 }
 
 
@@ -387,18 +421,37 @@ superstar_db_t superstar_db;
 bool write_is_authorized(std::string starpath,
 	const std::string &new_data,const std::string &new_auth)
 {
-	//Remove trailing slash (needed for file based auth checking)
-	if(starpath.size()>0&&starpath[starpath.size()-1]=='/')
-		starpath=starpath.substr(0,starpath.size()-1);
-
 	//Try to open auth file
-	std::ifstream f(("auth/"+starpath).c_str());
+	std::ifstream f("auth");
 
-	//No auth found
+	//No passwords at all, return true
 	if(!f.good())
+		return true;
+
+	//Open auth file and parse passwords in line based format "PATH PASSWORD" (without quotes)
+	bool found=false;
+	std::string pass;
+	while(std::getline(f,pass))
+	{
+		std::istringstream istr(pass);
+		std::string path;
+		istr>>path;
+		//Strip beginning and ending slashes to make passwords easier...
+		if(strip_slashes(path)==strip_slashes(starpath))
+		{
+			//No password...
+			if(!(istr>>pass))
+				pass="";
+			found=true;
+			break;
+		}
+	}
+
+	//No password found
+	if(!found)
 	{
 		//Remove top level of path
-		std::string new_starpath=starpath;
+		std::string new_starpath=strip_slashes_end(starpath);
 		while(new_starpath.size()>0&&new_starpath[new_starpath.size()-1]!='/')
 			new_starpath=new_starpath.substr(0,new_starpath.size()-1);
 
@@ -410,8 +463,9 @@ bool write_is_authorized(std::string starpath,
 		return true;
 	}
 
-	std::string pass;
-	std::getline(f,pass);
+	//Blank password is the same as no password
+	if(pass.size()<=0)
+		return true;
 
 // If we get here, there is a password.  Verify there is an authentication code.
 	if (new_auth.size()<=0) return false; // need authentication code
@@ -424,20 +478,6 @@ bool write_is_authorized(std::string starpath,
 	std::string should_auth=getAuthCode<SHA256>(alldata);
 	if (should_auth!=new_auth) return false; // authentication mismatch
 	else return true;
-}
-
-//Replace all instances of "find" with "replace" in "str".
-std::string replace_all(std::string str,const std::string& find,const std::string& replace)
-{
-	size_t pos=0;
-
-	while((pos=str.find(find,pos))!=std::string::npos)
-	{
-		str.replace(pos,find.size(),replace);
-		pos+=replace.size();
-	}
-
-	return str;
 }
 
 // This function will be called by mongoose on every new request.
