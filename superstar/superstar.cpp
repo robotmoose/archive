@@ -92,6 +92,13 @@ std::string strip_slashes(std::string str)
 	return strip_slashes_end(strip_slashes_start(str));
 }
 
+std::string strip_toplevel(std::string starpath)
+{
+	starpath=strip_slashes_end(starpath);
+	while(starpath.size()>0&&starpath[starpath.size()-1]!='/')
+		starpath=starpath.substr(0,starpath.size()-1);
+	return starpath;
+}
 
 /// Utility: integer to string
 std::string my_itos(int i) {
@@ -439,7 +446,7 @@ bool write_is_authorized(std::string starpath,
 		//Strip beginning and ending slashes to make passwords easier...
 		if(strip_slashes(path)==strip_slashes(starpath))
 		{
-			//No password...
+			//Empty password...
 			if(!(istr>>pass))
 				pass="";
 			found=true;
@@ -451,9 +458,7 @@ bool write_is_authorized(std::string starpath,
 	if(!found)
 	{
 		//Remove top level of path
-		std::string new_starpath=strip_slashes_end(starpath);
-		while(new_starpath.size()>0&&new_starpath[new_starpath.size()-1]!='/')
-			new_starpath=new_starpath.substr(0,new_starpath.size()-1);
+		std::string new_starpath=strip_toplevel(starpath);
 
 		//If top level path isn't blank and not the same as the old one, try it's auth
 		if(new_starpath.size()>0&&new_starpath!=starpath)
@@ -467,17 +472,31 @@ bool write_is_authorized(std::string starpath,
 	if(pass.size()<=0)
 		return true;
 
-// If we get here, there is a password.  Verify there is an authentication code.
-	if (new_auth.size()<=0) return false; // need authentication code
+	//If we get here, there is a password.  Verify there is an authentication code.
+	if (new_auth.size()<=0)
+		return false; // need authentication code
 
-	// FIXME: extract sequence number (read JSON in new_data?)
+	//FIXME: extract sequence number(read JSON in new_data?)
 	int seq=0;
 	std::string alldata=pass+":"+starpath+":"+new_data+":"+my_itos(seq);
 
-// Check to see what auth code should be
+	//Check to see what auth code should be
 	std::string should_auth=getAuthCode<SHA256>(alldata);
-	if (should_auth!=new_auth) return false; // authentication mismatch
-	else return true;
+
+
+	//If auths don't match, parent's auth works as well, so check that
+	if(should_auth!=new_auth)
+	{
+		//Remove top level of path
+		std::string new_starpath=strip_toplevel(starpath);
+
+		//If top level path isn't blank and not the same as the old one, try it's auth
+		if(new_starpath.size()>0&&new_starpath!=starpath)
+			return write_is_authorized(new_starpath,new_data,new_auth);
+	}
+
+	//Otherwise, return if the auth is what it should be
+	return (should_auth==new_auth);
 }
 
 // This function will be called by mongoose on every new request.
