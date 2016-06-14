@@ -524,7 +524,7 @@ void superstar_http_handler(struct mg_connection *conn, int ev,void *param) {
   std::string starpath=mg_str_to_std_string(&m->uri).substr(strlen(prefix));
 
   //Hacky way to replace multiple slashes with a single slash
-  for(size_t ii=0;ii<starpath.size()/2;++ii)
+  for(size_t ii=0;ii<starpath.size()/2+1;++ii)
 	starpath=replace_all(starpath,"//","/");
 
   std::string query=mg_str_to_std_string(&m->query_string);
