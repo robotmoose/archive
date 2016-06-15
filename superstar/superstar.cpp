@@ -460,10 +460,15 @@ bool write_is_authorized(std::string starpath,
 		//Remove top level of path
 		std::string new_starpath=strip_toplevel(starpath);
 
+		std::cout<<"|"<<new_starpath<<"|==|"<<starpath<<std::endl;
 		//If top level path isn't blank and not the same as the old one, try it's auth
-		if(new_starpath.size()>0&&new_starpath!=starpath)
+		if(new_starpath!=starpath)
+		{
+			std::cout<<"call 0"<<std::endl;
 			return write_is_authorized(new_starpath,new_data,new_auth);
+		}
 
+		std::cout<<"call 1"<<std::endl;
 		//Else no auth, writeable
 		return true;
 	}
@@ -481,22 +486,25 @@ bool write_is_authorized(std::string starpath,
 	std::string alldata=pass+":"+starpath+":"+new_data+":"+my_itos(seq);
 
 	//Check to see what auth code should be
-	std::string should_auth=getAuthCode<SHA256>(alldata);
-
+	//std::string should_auth=getAuthCode<SHA256>(alldata);
 
 	//If auths don't match, parent's auth works as well, so check that
-	if(should_auth!=new_auth)
+	if(pass!=new_auth)
 	{
 		//Remove top level of path
 		std::string new_starpath=strip_toplevel(starpath);
 
 		//If top level path isn't blank and not the same as the old one, try it's auth
-		if(new_starpath.size()>0&&new_starpath!=starpath)
+		if(new_starpath!=starpath)
+		{
+			std::cout<<"call 2"<<std::endl;
 			return write_is_authorized(new_starpath,new_data,new_auth);
+		}
 	}
+	std::cout<<"call 3"<<std::endl;
 
 	//Otherwise, return if the auth is what it should be
-	return (should_auth==new_auth);
+	return (pass==new_auth);
 }
 
 // This function will be called by mongoose on every new request.
