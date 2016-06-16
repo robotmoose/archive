@@ -1,6 +1,6 @@
 /*
-The main function here is getAuthCode, at the end, which 
-returns an alphanumeric authentication code based on the 
+The main function here is getAuthCode, at the end, which
+returns an alphanumeric authentication code based on the
 hash of the message and a shared secret password.
 
 If you know the password, you can sign messages, but
@@ -407,7 +407,7 @@ code.google.com/p/crypto-js/wiki/License
     C.HmacSHA256 = Hasher._createHmacHelper(SHA256);
 }(Math));
 
-/* 
+/*
 Finally, this is the real authentication generation code.
 	Password is the shared secret
 	Path is the full path to the object accessed
@@ -417,12 +417,11 @@ The return value is an alphanumeric version of the hash.
 */
 function getAuthCode(password,path,message,seq) {
 	var hash=CryptoJS.SHA256(password+":"+path+":"+message+":"+seq).toString(); // LONG hex output
-	
 	// Auth code character set, alphanumeric but skipping similar letters "1IlO0"
 	//   This MUST match the same list in the C++ code!
 	var table="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
 	var lastcopy=Math.floor((1<<16)/table.length)*table.length; // 16 bit chunks
-	
+
 	// Make auth code by folding 16-bit chunks of the hash together.
 	//   The resulting collisions mean lots of hashes fit the same password.
 	var auth="";
