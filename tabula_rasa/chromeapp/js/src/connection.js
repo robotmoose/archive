@@ -49,11 +49,15 @@ connection_t.prototype.reset=function() {
 	_this.sensors.power={}; // Commanded values reflected back up to pilot
 
 	// Cancel all outstanding getnext calls
-	if (_this.getnexts) {
-		for (var i=0;i<_this.getnexts.length;i++)
-			_this.getnexts[i].abort();
+	if ( _this.getnexts) {
+		console.log("Cleaning " + _this.getnexts.length + " getnext sockets.")
+		this.getnexts.forEach(function(conn) {
+			conn.abort();
+		});
+		_this.getnexts.splice(0);
+	} else {
+		_this.getnexts = [];
 	}
-	_this.getnexts=[];
 
 	// Localization
 	_this.location=new vec3(0,0,0);
