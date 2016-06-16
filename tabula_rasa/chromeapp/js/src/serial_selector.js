@@ -19,6 +19,7 @@ function serial_selector_t(div,on_connect,on_disconnect,is_connectable)
 	this.on_connect=on_connect;
 	this.on_disconnect=on_disconnect;
 	this.is_connectable=is_connectable;
+	this.last_serial=null;
 
 	if(!this.is_connectable)
 		this.is_connectable=function(){return true;};
@@ -30,7 +31,7 @@ function serial_selector_t(div,on_connect,on_disconnect,is_connectable)
 
 	this.checkmark=new checkmark_t(this.el);
 
-	this.dropdown=new dropdown_t(this.checkmark.getElement(),function(){return this.connected;});
+	this.dropdown=new dropdown_t(this.checkmark.getElement(),function(){return _this.connected;});
 	this.dropdown.set_width("100%");
 
 	this.button=document.createElement("input");
@@ -49,6 +50,7 @@ serial_selector_t.prototype.connect=function()
 		this.dropdown.disable();
 		this.button.value="Disconnect";
 		this.selected_value=this.dropdown.selected();
+		this.last_serial=this.selected_value;
 		this.connected=true;
 
 		if(this.on_connect)
@@ -78,6 +80,12 @@ serial_selector_t.prototype.disconnect=function()
 	}
 }
 
+serial_selector_t.prototype.load=function(robot)
+{
+	if(robot.serial)
+		this.last_serial=robot.serial;
+}
+
 
 serial_selector_t.prototype.build_list_m=function(ports)
 {
@@ -95,7 +103,7 @@ serial_selector_t.prototype.build_list_m=function(ports)
 			found=true;
 	}
 
-	this.dropdown.build(real_list);
+	this.dropdown.build(real_list,this.last_serial);
 
 	if(this.connected&&old&&!found)
 		this.disconnect();

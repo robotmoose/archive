@@ -48,8 +48,6 @@ function gui_t(div)
 		}
 
 	);
-	this.connection.on_name_set=function(robot){_this.name.load(robot);};
-	this.connection.load();
 	this.serial_selector=new serial_selector_t
 	(
 		this.name.el,
@@ -68,6 +66,12 @@ function gui_t(div)
 				_this.name.get_robot().year!=null);
 		}
 	);
+	this.connection.on_name_set=function(robot)
+	{
+		_this.name.load(robot);
+		_this.serial_selector.load(robot);
+	};
+	this.connection.load();
 
 	this.status_viewer=new status_viewer_t(this.main_div);
 	this.name.el.appendChild(document.createElement("br"));

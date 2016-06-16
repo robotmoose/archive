@@ -66,7 +66,7 @@ dropdown_t.prototype.selected_index=function()
 
 dropdown_t.prototype.build=function(list,on_loaded_value)
 {
-	//if(document.activeElement!=this.select)
+	if(document.activeElement!=this.select)
 	{
 		var old="";
 		var found=false;

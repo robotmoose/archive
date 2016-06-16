@@ -1095,8 +1095,9 @@ connection_t.prototype.serial_send_packet=function(command,array_data,done_callb
 connection_t.prototype.save=function()
 {
 	var _this=this;
-
-	chrome.storage.local.set({"robot":this.robot},
+	var robot=this.robot;
+	robot.serial=this.port_name;
+	chrome.storage.local.set({"robot":robot},
 		function(){_this.status_message("Saved robot.");});
 }
 
