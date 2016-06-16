@@ -424,10 +424,17 @@ superstar_db_t superstar_db;
 
 /**
   Return true if a write to this starpath is allowed.
+  The variable orig_starpath refers to the original starpath passed,
+    since this is a recursive function, the starpath variable gets the
+    top level stripped off to check for higher privileged auth codes.
 */
 bool write_is_authorized(std::string starpath,
-	const std::string &new_data,const std::string &new_auth)
+	const std::string &new_data,const std::string &new_auth,
+	std::string orig_starpath="")
 {
+	if(orig_starpath.size()==0)
+		orig_starpath=starpath;
+
 	//Try to open auth file
 	std::ifstream f("auth");
 
@@ -462,7 +469,7 @@ bool write_is_authorized(std::string starpath,
 
 		//If top level path isn't blank and not the same as the old one, try it's auth
 		if(new_starpath!=starpath)
-			return write_is_authorized(new_starpath,new_data,new_auth);
+			return write_is_authorized(new_starpath,new_data,new_auth,orig_starpath);
 
 		//Else no auth, writeable
 		return true;
@@ -478,7 +485,7 @@ bool write_is_authorized(std::string starpath,
 
 	//FIXME: extract sequence number(read JSON in new_data?)
 	int seq=0;
-	std::string alldata=pass+":"+starpath+":"+new_data+":"+my_itos(seq);
+	std::string alldata=pass+":"+orig_starpath+":"+new_data+":"+my_itos(seq);
 
 	//Check to see what auth code should be
 	std::string should_auth=getAuthCode<SHA256>(alldata);
@@ -491,7 +498,7 @@ bool write_is_authorized(std::string starpath,
 
 		//If top level path isn't blank and not the same as the old one, try it's auth
 		if(new_starpath!=starpath)
-			return write_is_authorized(new_starpath,new_data,new_auth);
+			return write_is_authorized(new_starpath,new_data,new_auth,orig_starpath);
 	}
 
 	//Otherwise, return if the auth is what it should be

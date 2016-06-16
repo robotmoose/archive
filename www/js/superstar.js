@@ -151,8 +151,8 @@ function superstar_getnext(robot,path,on_success,on_error)
 // Write this object to this path
 function superstar_set(robot,path,json,on_success,on_error)
 {
-	var json_str=encodeURIComponent(JSON.stringify(json));
-	var auth="";
+	var json_str=JSON.stringify(json);
+	var auth=robot.auth;
 
 	if (robot.auth) {
 		var starpath=superstar_path(robot,path);
@@ -161,6 +161,7 @@ function superstar_set(robot,path,json,on_success,on_error)
 		//console.log(path,"Authentication code "+auth);
 	}
 
+	json_str=encodeURIComponent(json_str);
 	superstar_generic(robot,path,"?set="+json_str+auth,
 		function(response) {
 			if (on_success) on_success();

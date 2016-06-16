@@ -44,13 +44,13 @@ function modal_connect_t(div)
 	this.modal.get_content().appendChild(document.createElement("br"));
 
 	this.robot_auth.className="form-control";
-	this.robot_auth.type="text";
+	this.robot_auth.type="password";
 	this.robot_auth.placeholder="Enter robot authentication";
 	this.modal.get_content().appendChild(this.robot_auth);
 
 	this.modal.get_content().appendChild(document.createElement("br"));
 
-	
+
 	this.connect_button.className="btn btn-primary";
 	this.connect_button.disabled=true;
 	this.connect_button.type="button";
@@ -71,7 +71,7 @@ function modal_connect_t(div)
 
 		if(myself.onconnect)
 			myself.onconnect(robot);
-		
+
 		myself.hide();
 	};
 	this.modal.get_footer().appendChild(this.connect_button);
@@ -157,7 +157,7 @@ modal_connect_t.prototype.build_school_list_m=function()
 
 		this.update_disables_m();
 
-		if(this.year_select.selectedIndex!=0)	
+		if(this.year_select.selectedIndex!=0)
 			superstar_sub(null,get_select_value(this.year_select),
 				function(school_list)
 				{
