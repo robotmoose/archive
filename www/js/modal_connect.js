@@ -44,7 +44,7 @@ function modal_connect_t(div)
 	this.modal.get_content().appendChild(document.createElement("br"));
 
 	this.robot_auth.className="form-control";
-	this.robot_auth.type="text";
+	this.robot_auth.type="password";
 	this.robot_auth.placeholder="Enter robot authentication";
 	this.modal.get_content().appendChild(this.robot_auth);
 
