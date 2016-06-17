@@ -21,24 +21,24 @@ function modal_connect_t(div)
 		return null;
 	}
 
-	var myself=this;
+	var _this=this;
 
 	this.modal.set_title("Connect to Robot");
 
 	this.year_select.className="form-control";
-	this.year_select.onchange=function(){myself.build_school_list_m()};
+	this.year_select.onchange=function(){_this.build_school_list_m()};
 	this.modal.get_content().appendChild(this.year_select);
 
 	this.modal.get_content().appendChild(document.createElement("br"));
 
 	this.school_select.className="form-control";
-	this.school_select.onchange=function(){myself.build_robot_list_m()};
+	this.school_select.onchange=function(){_this.build_robot_list_m()};
 	this.modal.get_content().appendChild(this.school_select);
 
 	this.modal.get_content().appendChild(document.createElement("br"));
 
 	this.robot_select.className="form-control";
-	this.robot_select.onchange=function(){myself.update_disables_m();};
+	this.robot_select.onchange=function(){_this.update_disables_m();};
 	this.modal.get_content().appendChild(this.robot_select);
 
 	this.modal.get_content().appendChild(document.createElement("br"));
@@ -46,6 +46,11 @@ function modal_connect_t(div)
 	this.robot_auth.className="form-control";
 	this.robot_auth.type="password";
 	this.robot_auth.placeholder="Enter robot authentication";
+	this.robot_auth.onkeydown=function(event)
+	{
+		if(event.keyCode==13)
+			_this.connect_button.click();
+	};
 	this.modal.get_content().appendChild(this.robot_auth);
 
 	this.modal.get_content().appendChild(document.createElement("br"));
@@ -59,46 +64,46 @@ function modal_connect_t(div)
 	{
 		var robot={};
 		robot.superstar=null; // <- means "same server as this page"
-		robot.year=get_select_value(myself.year_select);
-		robot.school=get_select_value(myself.school_select);
-		robot.name=get_select_value(myself.robot_select);
-		robot.auth=myself.robot_auth.value;
+		robot.year=get_select_value(_this.year_select);
+		robot.school=get_select_value(_this.school_select);
+		robot.name=get_select_value(_this.robot_select);
+		robot.auth=_this.robot_auth.value;
 
 		// Remember selections for later using localStorage API
 		localStorage.previous_year = robot.year;
 		localStorage.previous_school = robot.school;
 		localStorage.previous_robot = robot.name;
 
-		if(myself.onconnect)
-			myself.onconnect(robot);
+		if(_this.onconnect)
+			_this.onconnect(robot);
 
-		myself.hide();
+		_this.hide();
 	};
 	this.modal.get_footer().appendChild(this.connect_button);
 
 	this.cancel_button.className="btn btn-primary";
 	this.cancel_button.type="button";
 	this.cancel_button.value="Cancel";
-	this.cancel_button.onclick=function(){myself.hide();};
+	this.cancel_button.onclick=function(){_this.hide();};
 	this.modal.get_footer().appendChild(this.cancel_button);
 }
 
 modal_connect_t.prototype.show=function()
 {
-	var myself=this;
+	var _this=this;
 
 	try
 	{
 		superstar_sub(null,"",
 			function(year_list)
 			{
-				myself.years=year_list;
-				myself.schools=[];
-				myself.robots=[];
-				myself.build_year_list_m();
-				myself.build_school_list_m();
-				myself.build_robot_list_m();
-				myself.modal.show();
+				_this.years=year_list;
+				_this.schools=[];
+				_this.robots=[];
+				_this.build_year_list_m();
+				_this.build_school_list_m();
+				_this.build_robot_list_m();
+				_this.modal.show();
 			},
 			function(error)
 			{
@@ -144,7 +149,7 @@ modal_connect_t.prototype.build_year_list_m=function()
 
 modal_connect_t.prototype.build_school_list_m=function()
 {
-	var myself=this;
+	var _this=this;
 
 	try
 	{
@@ -162,19 +167,19 @@ modal_connect_t.prototype.build_school_list_m=function()
 				function(school_list)
 				{
 					var select_index;
-					myself.schools=school_list;
+					_this.schools=school_list;
 
-					for(var key in myself.schools)
+					for(var key in _this.schools)
 					{
 						var option=document.createElement("option");
-						option.text=myself.schools[key];
+						option.text=_this.schools[key];
 						if (localStorage.previous_school == option.text) {
 							option.selected = true;
 						}
-						myself.school_select.appendChild(option);
+						_this.school_select.appendChild(option);
 					}
 
-					myself.update_disables_m();
+					_this.update_disables_m();
 				},
 				function(error)
 				{
@@ -189,7 +194,7 @@ modal_connect_t.prototype.build_school_list_m=function()
 
 modal_connect_t.prototype.build_robot_list_m=function()
 {
-	var myself=this;
+	var _this=this;
 
 	try
 	{
@@ -213,20 +218,20 @@ modal_connect_t.prototype.build_robot_list_m=function()
 			superstar_sub(null,get_select_value(this.year_select)+"/"+school,
 				function(robot_list)
 				{
-					myself.robots=robot_list;
+					_this.robots=robot_list;
 
-					for(var key in myself.robots)
+					for(var key in _this.robots)
 					{
 						var option=document.createElement("option");
-						option.text=myself.robots[key];
+						option.text=_this.robots[key];
 						if (localStorage.previous_robot == option.text) {
 							option.selected = true;
 						}
 
-						myself.robot_select.appendChild(option);
+						_this.robot_select.appendChild(option);
 					}
 
-					myself.update_disables_m();
+					_this.update_disables_m();
 				},
 				function(error)
 				{

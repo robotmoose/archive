@@ -124,14 +124,14 @@ robot_map_t.prototype.setup=function() {
 	//console.log("Set up renderer");
 }
 
-robot_map_t.prototype.add_map=function(filename) {
+robot_map_t.prototype.add_map=function(filename, scale) {
 
-
+	if (!scale) scale = 10;
 	var myself = this;
 
 	var size = 1000;
-	var width = 10;
-	var height = 10;
+	var width = scale;
+	var height = scale;
 	showOrigin = 20;
 
 		var texture_file = filename;
