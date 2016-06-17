@@ -1,5 +1,6 @@
 // Arsh Chauhan
 // 06/15/2016
+// Last Edited 06/17/2016
 // sound_player.js: Play sounds on robot via chromeapp backend
 // Public Domain 
 
@@ -18,7 +19,6 @@ function sound_player_t(name)
 	this.name=name;
 	this.sounds=
 	[
-		//{"sound_requested":""},
 		{name:"bike horn",audio:new Audio("https://robotmoose.com/downloads/files/bike_horn.wav")},
 		{name:"dummy",audio:new Audio("https://robotmoose.com/downloads/files/bike_horn.wav")}
 	];
@@ -27,6 +27,9 @@ function sound_player_t(name)
 	this.path="run";
 
 	this.no_send=false;
+
+	this.update_interval=setInterval(function(){_this.update()},5000);
+	this.play=false;
 
 }
 
@@ -38,7 +41,6 @@ sound_player_t.prototype.send_sounds=function()
 		var sound_list=[];
 		for(index in this.sounds)
 		{
-			//console.log(this.sounds[index].name);
 			sound_list.push(this.sounds[index].name);
 		}
 		console.log(sound_list)
@@ -65,18 +67,17 @@ sound_player_t.prototype.play_sound=function(sound)
 
 sound_player_t.prototype.handle_update=function(json)
 {
-	console.log(json);
+
 	this.sound_requested=json["sound"];
-	console.log("Song requested "+this.sound_requested);
+	this.play=json["play"];
 	
-	if(this.sound_requested!="") //We received a request to play sound
+	if(this.play) //We received a request to play sound
 	{
 		for (index in this.sounds)
 		{
 			if(this.sounds[index].name===this.sound_requested)
 				this.play_sound(this.sounds[index].audio);
 		}
-		this.sound_requested="";
 	}
 }
 
@@ -89,7 +90,8 @@ sound_player_t.prototype.update=function()
 		superstar_get(robot,this.path,function(json){_this.handle_update(json);});
 }
 
-sound_player_t.prototype.test=function()
+sound_player_t.prototype.destroy=function()
 {
-	this.update();
+	clearInterval(this.update_interval);
 }
+

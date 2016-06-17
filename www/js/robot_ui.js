@@ -156,7 +156,8 @@ robot_ui_t.prototype.download_gui=function()
 			states:myself.create_doorway("Code","Automatically drive the robot",help_text_states),
 			map:myself.create_doorway("Map","See where the robot thinks it is",null),
 			video:myself.create_doorway("Video","Show the robot's video camera",null),
-			UI:myself.create_doorway("UI","Customized robot user interface",help_text_ui)
+			UI:myself.create_doorway("UI","Customized robot user interface",help_text_ui),
+			sound:myself.create_doorway("Get Attention","Play sounds on the backend to get attention",null)
 		};
 
 		clear_out(myself.doorways.config.content);
@@ -166,6 +167,7 @@ robot_ui_t.prototype.download_gui=function()
 		clear_out(myself.doorways.map.content);
 		clear_out(myself.doorways.video.content);
 		clear_out(myself.doorways.UI.content);
+		clear_out(myself.doorways.sound.content);
 
 		myself.gui.element.hide_all();
 		myself.gui.element.minimize(myself.doorways.config,false);
@@ -230,7 +232,8 @@ robot_ui_t.prototype.create_widgets=function()
 		sensors:new tree_viewer_t(this.doorways.sensors.content,{}),
 		map:new robot_map_t(this.doorways.map.content,{}),
 		video:new video_widget_t(this.doorways.video,myself.pilot_heartbeat),
-		UI:new UI_builder_t(this.doorways.UI.content)
+		UI:new UI_builder_t(this.doorways.UI.content),
+		sound:new sound_player_t(this.doorways.sound.content,myself.robot)
 	};
 	this.state_runner.set_UI(this.widgets.UI);
 

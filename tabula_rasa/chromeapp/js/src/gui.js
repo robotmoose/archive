@@ -136,17 +136,6 @@ function gui_t(div)
 	});
 
 	this.sound_player=new sound_player_t(this.name);
-	//Sound testing
-	this.sound_button=document.createElement("input");
-	this.serial_selector.el.appendChild(this.sound_button);
-	this.sound_button.type="button";
-	this.sound_button.value="Test Sound";
-	this.sound_button.style.marginLeft="2px";
-	this.sound_button.onclick=function()
-	{
-		_this.sound_player.send_sounds();
-		_this.sound_player.test();
-	}
 }
 
 gui_t.prototype.destroy=function()
