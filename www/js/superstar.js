@@ -48,7 +48,7 @@ function superstar_generic(robot,path,request,on_success,on_error)
 				{
 					try
 					{
-						//console.log("Network "+url+" -> "+xhr.responseText);
+						console.log("Network "+url+" -> "+xhr.responseText);
 						on_success(xhr.responseText);
 					}
 					catch(error)
@@ -153,6 +153,8 @@ function superstar_set(robot,path,json,on_success,on_error)
 {
 	var json_str=JSON.stringify(json);
 	var auth=robot.auth;
+	if(!robot.auth)
+		auth="";
 
 	if (robot.auth) {
 		var starpath=superstar_path(robot,path);
