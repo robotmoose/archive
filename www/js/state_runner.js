@@ -375,8 +375,16 @@ state_runner_t.prototype.make_user_VM=function(code,states)
 		return ret.value; // mouse up/down boolean
 	};
 	// Make a checkbox with a label
-	VM.checkbox=function(name, opts) {
+	VM.checkbox=function(name, bool_v, opts) {
 		var ret=VM.UI.element(name,"checkbox",opts);
+		if (bool_v)
+		{
+			var s_arr = bool_v.split(".");
+			var v_str;
+			if (s_arr[0] === "store") v_str = s_arr[1];
+			else v_str = s_arr[0];
+			if (ret.dom.checked) VM.store[v_str] = true;
+		}
 		return ret.dom.checked; // checked/unchecked boolean
 	};
 	// Make a slider with a label
