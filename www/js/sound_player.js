@@ -2,7 +2,7 @@
 // 06/17/2016
 // Last Edited 06/17/2016
 // sound_player.js: Interface to request sound to be played on backend
-// Public Domain 
+// Public Domain
 
 function sound_player_t(div,robot)
 {
@@ -29,7 +29,7 @@ function sound_player_t(div,robot)
 	{
 		_this.sound_requested=get_select_value(_this.sound_selector);
 	};
-	
+
 
 	this.play_sound_button=document.createElement("input");
 	this.play_sound_button.type="button";
@@ -55,11 +55,12 @@ function sound_player_t(div,robot)
 
 sound_player_t.prototype.get_sounds=function(json)
 {
-	for (index in json.options)
+	if(json&&json.options)
 	{
-		this.sounds[index]=json.options[index];
+		for (index in json.options)
+			this.sounds[index]=json.options[index];
+		this.build_sound_list();
 	}
-	this.build_sound_list();
 }
 sound_player_t.prototype.download=function()
 {
