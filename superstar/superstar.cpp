@@ -565,61 +565,74 @@ void superstar_http_handler(struct mg_connection *conn, int ev,void *param) {
 
 
 
-	//poping and/or pushing value
-	if(0<=mg_get_http_var(&m->query_string,"pop",buf,NBUF)||0<=mg_get_http_var(&m->query_string,"push",buf,NBUF))
+	//appending and/or trimming value
+	if(0<=mg_get_http_var(&m->query_string,"append",buf,NBUF)||0<=mg_get_http_var(&m->query_string,"trim",buf,NBUF))
 	{
-		//poping value
-		if(0<=mg_get_http_var(&m->query_string,"pop",buf,NBUF))
+		//appending value
+		if(0<=mg_get_http_var(&m->query_string,"append",buf,NBUF))
 		{
-			std::string popval(buf);
+			std::string appendval(buf);
 			char sentauth[NBUF];
 
 			//empty authentication string
 			if(0>mg_get_http_var(&m->query_string,"auth",sentauth,NBUF))
 				sentauth[0]=0;
 
-			if(write_is_authorized(starpath,popval,sentauth))
-			{
-				std::string new_value=superstar_db.get(starpath);
-				while(new_value.size()>0&&new_value[0]!='\n')
-					new_value=new_value.substr(1,new_value.size()-1);
-				if(new_value.size()>0)
-					new_value=new_value.substr(1,new_value.size()-1);
-				content+="<P>Poped new value='"+new_value+"'\n";
-				superstar_db.set(starpath,new_value);
-			}
-			else
-			{
-				content+="AUTHENTICATION MISMATCH";
-				printf("  Authentication mismatch: pop to '%s' not authorized by '%s'\n",
-					starpath.c_str(),sentauth);
-			}
-		}
-
-		//pushing value
-		if(0<=mg_get_http_var(&m->query_string,"push",buf,NBUF))
-		{
-			std::string pushval(buf);
-			char sentauth[NBUF];
-
-			//empty authentication string
-			if(0>mg_get_http_var(&m->query_string,"auth",sentauth,NBUF))
-				sentauth[0]=0;
-
-			if(write_is_authorized(starpath,pushval,sentauth))
+			if(write_is_authorized(starpath,appendval,sentauth))
 			{
 				std::string old_value=superstar_db.get(starpath);
 				std::string new_value=old_value;
 				if(new_value.size()>0)
 					new_value+="\n";
-				new_value+=pushval;
-				content+="<P>Pushed new value='"+new_value+"'\n";
+				new_value+=appendval;
+				content+="<P>Appended new value='"+new_value+"'\n";
 				superstar_db.set(starpath,new_value);
 			}
 			else
 			{
 				content+="AUTHENTICATION MISMATCH";
-				printf("  Authentication mismatch: push to '%s' not authorized by '%s'\n",
+				printf("  Authentication mismatch: append to '%s' not authorized by '%s'\n",
+					starpath.c_str(),sentauth);
+			}
+		}
+
+		//trimming value
+		if(0<=mg_get_http_var(&m->query_string,"trim",buf,NBUF))
+		{
+			std::string trimval(buf);
+			char sentauth[NBUF];
+
+			//empty authentication string
+			if(0>mg_get_http_var(&m->query_string,"auth",sentauth,NBUF))
+				sentauth[0]=0;
+
+			if(write_is_authorized(starpath,trimval,sentauth))
+			{
+				std::istringstream istr(trimval);
+				int wanted_lines;
+				if(istr>>wanted_lines)
+				{
+					int actual_lines=1;
+					std::string new_value=superstar_db.get(starpath);
+					for(size_t ii=0;ii<new_value.size();++ii)
+						if(new_value[ii]=='\n')
+							++actual_lines;
+
+					for(int ii=0;ii<actual_lines-wanted_lines;++ii)
+					{
+						while(new_value.size()>0&&new_value[0]!='\n')
+							new_value=new_value.substr(1,new_value.size()-1);
+						if(new_value.size()>0)
+							new_value=new_value.substr(1,new_value.size()-1);
+					}
+					superstar_db.set(starpath,new_value);
+					content+="<P>Trimmed new value='"+new_value+"'\n";
+				}
+			}
+			else
+			{
+				content+="AUTHENTICATION MISMATCH";
+				printf("  Authentication mismatch: trim to '%s' not authorized by '%s'\n",
 					starpath.c_str(),sentauth);
 			}
 		}

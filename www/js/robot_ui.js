@@ -78,8 +78,10 @@ robot_ui_t.prototype.create_menus=function()
 			myself.robot=JSON.parse(JSON.stringify(robot));
 			clearInterval(myself.gui.interval);
 			myself.gui.interval=null;
-			myself.menu.get_status_area().innerHTML="Connected to \""+myself.robot.name+"\"";
+			myself.menu.get_status_area().innerHTML="Connected to \""+
+				myself.robot.year+"/"+myself.robot.school+"/"+myself.robot.name+"\"";
 			myself.download_gui();
+			//myself.widgets.chat.set_robot(robot);
 		}
 	};
 }
@@ -93,7 +95,7 @@ robot_ui_t.prototype.create_gui=function()
 
 robot_ui_t.prototype.download_gui=function()
 {
-	if(!this.robot||!this.robot.name)
+	if(!valid_robot(this.robot))
 		return;
 
 	var myself=this;
@@ -138,8 +140,6 @@ robot_ui_t.prototype.download_gui=function()
 	+"<ul><li>Pin: Left wheel encoder pin</li><li>Pin: Right wheel encoder pin</li><li>"
 	+"Number: Robot wheelbase <ul><li>Distance between wheel centers (mm)</li></ul></li></ul>";
 
-
-
 	var clear_out=function(div)
 	{
 		while(div.firstChild)
@@ -157,7 +157,8 @@ robot_ui_t.prototype.download_gui=function()
 			map:myself.create_doorway("Map","See where the robot thinks it is",null),
 			video:myself.create_doorway("Video","Show the robot's video camera",null),
 			UI:myself.create_doorway("UI","Customized robot user interface",help_text_ui),
-			sound:myself.create_doorway("Get Attention","Play sounds on the backend to get attention",null)
+			sound:myself.create_doorway("Sound","Play sounds on the backend to get attention",null),
+			chat:myself.create_doorway("Chat","Chat with the caretaker of the robot.",null)
 		};
 
 		clear_out(myself.doorways.config.content);
@@ -168,6 +169,7 @@ robot_ui_t.prototype.download_gui=function()
 		clear_out(myself.doorways.video.content);
 		clear_out(myself.doorways.UI.content);
 		clear_out(myself.doorways.sound.content);
+		clear_out(myself.doorways.chat.content);
 
 		myself.gui.element.hide_all();
 		myself.gui.element.minimize(myself.doorways.config,false);
@@ -213,7 +215,7 @@ robot_ui_t.prototype.upload_gui=function()
 	var save=this.gui.element.save();
 	var stringified=JSON.stringify(save);
 
-	if(this.robot&&this.robot.name&&this.gui.old!=stringified)
+	if(valid_robot(this.robot)&&this.gui.old!=stringified)
 	{
 		superstar_set(this.robot,"gui",save);
 		this.gui.old=stringified;
@@ -224,6 +226,11 @@ robot_ui_t.prototype.create_widgets=function()
 {
 	var myself=this;
 
+	if(this.widgets)
+		for(key in this.widgets)
+			if(this.widgets[key].destroy)
+				this.widgets[key].destroy();
+
 	this.widgets=
 	{
 		config:new config_editor_t(this.doorways.config.content),
@@ -233,7 +240,8 @@ robot_ui_t.prototype.create_widgets=function()
 		map:new robot_map_t(this.doorways.map.content,{}),
 		video:new video_widget_t(this.doorways.video,myself.pilot_heartbeat),
 		UI:new UI_builder_t(this.doorways.UI.content),
-		sound:new sound_player_t(this.doorways.sound.content,myself.robot)
+		sound:new sound_player_t(this.doorways.sound.content,myself.robot),
+		chat:new chatter_t(this.doorways.chat.content,myself.robot,20,"Pilot")
 	};
 	this.state_runner.set_UI(this.widgets.UI);
 

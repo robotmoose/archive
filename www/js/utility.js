@@ -36,3 +36,8 @@ function get_select_value(select)
 {
 	return select.options[select.selectedIndex].text
 }
+
+function valid_robot(robot)
+{
+	return (robot&&robot.year&&robot.school&&robot.name);
+}
