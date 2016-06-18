@@ -106,7 +106,7 @@ robot_ui_t.prototype.download_gui=function()
 	+ "state = \"turnLeft\" // <i>Runs your state named \"turnLeft\"</i><br>"
 	+ "<h4>UI</h4>"
 	+ "label(\"This will appear in the UI\")<br>"
-	+ "button(\"Press me\", turnLeft)<br>"
+	+ "button(\"Press me\", \"turnLeft\")<br>"
 	+ "power.L=slider(\"left wheel\", -1.0, 0.0, 1.0) <br>"
 	+ "checkbox(\"Would you like to check this box?\")<br>"
 	//+ "if (checkbox(\"Would you like to check this box?\")) { print(\"Yes!\") } <br>"

@@ -383,7 +383,8 @@ state_runner_t.prototype.make_user_VM=function(code,states)
 			var v_str;
 			if (s_arr[0] === "store") v_str = s_arr[1];
 			{
-				if (ret.dom.checked) VM.store[v_str] = true;
+				VM.store[v_str] = ret.dom.checked;
+				
 			}
 			//else v_str = s_arr[0];
 		}
