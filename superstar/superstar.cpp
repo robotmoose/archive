@@ -326,7 +326,7 @@ public:
 			struct mg_connection *conn=e.waiting_connections[i];
 			conn->flags &= ~MG_F_USER_1; // mark as done
 			conn->user_data=0; // clear pointer
-  			printf("  sent off new value to getnext client\n");
+			printf("  sent off new value to getnext client\n");
 			send_json(conn,e.value);
 		}
 		// Remove them from the list
@@ -336,7 +336,7 @@ public:
 	// This connection is shutting down--cancel its getnext
 	bool connection_closing(struct mg_connection *conn) {
 		if ((conn->flags & MG_F_USER_1) && conn->user_data) { // connection is getnext still in progress
-  			printf("Closing an in-progress getnext (WEIRD CASE): ");
+			printf("Closing an in-progress getnext (WEIRD CASE): ");
 
 			database_entry &e=*(database_entry *)conn->user_data;
 
@@ -425,8 +425,8 @@ superstar_db_t superstar_db;
 /**
   Return true if a write to this starpath is allowed.
   The variable orig_starpath refers to the original starpath passed,
-    since this is a recursive function, the starpath variable gets the
-    top level stripped off to check for higher privileged auth codes.
+	since this is a recursive function, the starpath variable gets the
+	top level stripped off to check for higher privileged auth codes.
 */
 bool write_is_authorized(std::string starpath,
 	const std::string &new_data,const std::string &new_auth,
@@ -508,7 +508,7 @@ bool write_is_authorized(std::string starpath,
 // This function will be called by mongoose on every new request.
 void superstar_http_handler(struct mg_connection *conn, int ev,void *param) {
   if (ev==MG_EV_CLOSE) {
-  	superstar_db.connection_closing(conn);
+	superstar_db.connection_closing(conn);
   }
   if (ev!=MG_EV_HTTP_REQUEST) return; // not a request? not our problem
   // else it's an http request
@@ -542,8 +542,8 @@ void superstar_http_handler(struct mg_connection *conn, int ev,void *param) {
   const char *prefix="/superstar/";
   if (strncmp(m->uri.p,prefix,strlen(prefix))!=0)
   { // not superstar--serve raw files instead
-  	mg_serve_http(conn, m, s_http_server_opts);
-  	return;
+	mg_serve_http(conn, m, s_http_server_opts);
+	return;
   }
 
   std::string starpath=mg_str_to_std_string(&m->uri).substr(strlen(prefix));
@@ -559,102 +559,192 @@ void superstar_http_handler(struct mg_connection *conn, int ev,void *param) {
 //  "I see you're using source IP "+remote_ip+" and port "+my_itos(conn->remote_port)+"\n";
   content+="<P>Superstar path: "+starpath+"\n";
 
-  enum {NBUF=32767}; // maximum length for JSON data being set
-  char buf[NBUF];
+	enum {NBUF=32767}; // maximum length for JSON data being set
+	char buf[NBUF];
 
-  if (0<=mg_get_http_var(&m->query_string,"set",buf,NBUF)) { /* writing new value */
-  	std::string newval(buf);
-  	char sentauth[NBUF];
-  	if (0>mg_get_http_var(&m->query_string,"auth",sentauth,NBUF)) {
-  		sentauth[0]=0; // empty authentication string
-  	}
-  	if (write_is_authorized(starpath,newval,sentauth)) {
-		content+="<P>Setting new value='"+newval+"'\n";
-		superstar_db.set(starpath,newval);
-	}
-	else {
-		content+="AUTHENTICATION MISMATCH";
-		printf("  Authentication mismatch: write to '%s' not authorized by '%s'\n",
-			starpath.c_str(), sentauth);
-	}
 
-	// New optional syntax: /superstar/path1?set=newval1&get=path2,path3,path4
-	if (0<=mg_get_http_var(&m->query_string,"get",buf,NBUF))
+
+
+	//poping and/or pushing value
+	if(0<=mg_get_http_var(&m->query_string,"pop",buf,NBUF)||0<=mg_get_http_var(&m->query_string,"push",buf,NBUF))
 	{
-		std::string retArray="[";
-		char *bufLoc=buf;
-		while (0!=*bufLoc) {
-			char *nextComma=strchr(bufLoc,','); // Find next comma
-			if (nextComma!=0) *nextComma=0; // nul terminate at comma
+		//poping value
+		if(0<=mg_get_http_var(&m->query_string,"pop",buf,NBUF))
+		{
+			std::string popval(buf);
+			char sentauth[NBUF];
 
-			if (retArray.size()>1) retArray+=","; // add separator to output
-			std::string value=superstar_db.get(bufLoc); // add path to output
-			if (value=="") value="{}"; // mark empty JSON objects
-			printf("   mget path: %s -> %s\n",bufLoc,value.c_str());
-			retArray+=value;
+			//empty authentication string
+			if(0>mg_get_http_var(&m->query_string,"auth",sentauth,NBUF))
+				sentauth[0]=0;
 
-			if (nextComma==0) break; // done with this path
-			else bufLoc=nextComma+1; // move down string
+			if(write_is_authorized(starpath,popval,sentauth))
+			{
+				std::string new_value=superstar_db.get(starpath);
+				while(new_value.size()>0&&new_value[0]!='\n')
+					new_value=new_value.substr(1,new_value.size()-1);
+				if(new_value.size()>0)
+					new_value=new_value.substr(1,new_value.size()-1);
+				content+="<P>Poped new value='"+new_value+"'\n";
+				superstar_db.set(starpath,new_value);
+			}
+			else
+			{
+				content+="AUTHENTICATION MISMATCH";
+				printf("  Authentication mismatch: pop to '%s' not authorized by '%s'\n",
+					starpath.c_str(),sentauth);
+			}
 		}
-		retArray+="]";
-		send_json(conn,retArray);
-		return;
+
+		//pushing value
+		if(0<=mg_get_http_var(&m->query_string,"push",buf,NBUF))
+		{
+			std::string pushval(buf);
+			char sentauth[NBUF];
+
+			//empty authentication string
+			if(0>mg_get_http_var(&m->query_string,"auth",sentauth,NBUF))
+				sentauth[0]=0;
+
+			if(write_is_authorized(starpath,pushval,sentauth))
+			{
+				std::string old_value=superstar_db.get(starpath);
+				std::string new_value=old_value;
+				if(new_value.size()>0)
+					new_value+="\n";
+				new_value+=pushval;
+				content+="<P>Pushed new value='"+new_value+"'\n";
+				superstar_db.set(starpath,new_value);
+			}
+			else
+			{
+				content+="AUTHENTICATION MISMATCH";
+				printf("  Authentication mismatch: push to '%s' not authorized by '%s'\n",
+					starpath.c_str(),sentauth);
+			}
+		}
 	}
-  }
-  else { /* Not writing a new value */
-  	if (0<=mg_get_http_var(&m->query_string,"getnext",buf,NBUF))
-  	{ /* getting JSON when it next changes (COMET / Hanging Get / "Get on Set")
-  	     from the given value.  Send current value to avoid update race. */
-  		if (buf!=superstar_db.get(starpath))
-  		{ // need new value immediately
-  			printf("Sending getnext client immediate data\n");
-  			send_json(conn,superstar_db.get(starpath));
-  		}
-  		else
-  		{ // wait for new value to arrive
-  			printf("Queuing up the getnext client\n");
-  			conn->flags |= MG_F_USER_1; // mark as getnext in progress
-			superstar_db.getnext(starpath,conn);
+
+	//writing new value
+	else if(0<=mg_get_http_var(&m->query_string,"set",buf,NBUF))
+	{
+		std::string newval(buf);
+		char sentauth[NBUF];
+
+		//empty authentication string
+		if(0>mg_get_http_var(&m->query_string,"auth",sentauth,NBUF))
+			sentauth[0]=0;
+
+		if(write_is_authorized(starpath,newval,sentauth))
+		{
+			content+="<P>Setting new value='"+newval+"'\n";
+			superstar_db.set(starpath,newval);
 		}
-		return;
-  	}
-  	if (query=="get")
-  	{ /* getting raw JSON */
-		send_json(conn,superstar_db.get(starpath));
-		return;
-  	}
-  	if (query=="sub") { /* substring search */
-  		send_json(conn,superstar_db.substrings(starpath));
-  		return;
-  	}
-
-  	// fixme: "after" type query (requires thread suspend)
-
-  	std::string value=superstar_db.get(starpath);
-  	if (value.size()>0)
-		content+="<P>Current value: '"+value+"'";
-	else { // no value set.  Substrings?
-		std::string subs=superstar_db.substrings(starpath);
-		std::string links=superstar_db.sublinks(starpath);
-
-		if (subs.size()>2) // not just []
-			content+="<P>Sub directories: "+links+"\n";
 		else
-			content+="<P>No data found.\n";
+		{
+			content+="AUTHENTICATION MISMATCH";
+			printf("  Authentication mismatch: write to '%s' not authorized by '%s'\n",
+				starpath.c_str(), sentauth);
+		}
+
+		//New optional syntax: /superstar/path1?set=newval1&get=path2,path3,path4
+		if(0<=mg_get_http_var(&m->query_string,"get",buf,NBUF))
+		{
+			std::string retArray="[";
+			char* bufLoc=buf;
+			while(0!=*bufLoc)
+			{
+				//find next comma
+				char* nextComma=strchr(bufLoc,',');
+
+				//null terminate at comma
+				if(nextComma!=0)
+					*nextComma=0;
+
+				//add separator to output
+				if(retArray.size()>1)
+					retArray+=",";
+
+				//add path to output
+				std::string value=superstar_db.get(bufLoc);
+
+				// mark empty JSON objects
+				if(value=="")
+					value="{}";
+
+				printf("   mget path: %s -> %s\n",bufLoc,value.c_str());
+				retArray+=value;
+
+				//done with this path
+				if(nextComma==0)
+					break;
+
+				// move down string
+				else
+					bufLoc=nextComma+1;
+			}
+			retArray+="]";
+			send_json(conn,retArray);
+			return;
+		}
 	}
-  }
+
+	//Not writing a new value
+	else
+	{
+		if (0<=mg_get_http_var(&m->query_string,"getnext",buf,NBUF))
+		{ /* getting JSON when it next changes (COMET / Hanging Get / "Get on Set")
+			 from the given value.  Send current value to avoid update race. */
+			if (buf!=superstar_db.get(starpath))
+			{ // need new value immediately
+				printf("Sending getnext client immediate data\n");
+				send_json(conn,superstar_db.get(starpath));
+			}
+			else
+			{ // wait for new value to arrive
+				printf("Queuing up the getnext client\n");
+				conn->flags |= MG_F_USER_1; // mark as getnext in progress
+				superstar_db.getnext(starpath,conn);
+			}
+			return;
+		}
+		if (query=="get")
+		{ /* getting raw JSON */
+			send_json(conn,superstar_db.get(starpath));
+			return;
+		}
+		if (query=="sub") { /* substring search */
+			send_json(conn,superstar_db.substrings(starpath));
+			return;
+		}
+
+		// fixme: "after" type query (requires thread suspend)
+
+		std::string value=superstar_db.get(starpath);
+		if (value.size()>0)
+			content+="<P>Current value: '"+value+"'";
+		else { // no value set.  Substrings?
+			std::string subs=superstar_db.substrings(starpath);
+			std::string links=superstar_db.sublinks(starpath);
+
+			if (subs.size()>2) // not just []
+				content+="<P>Sub directories: "+links+"\n";
+			else
+				content+="<P>No data found.\n";
+		}
+	}
 
 
   content+="</BODY></HTML>";
 
   // Send human-readable HTTP reply to the client
   mg_printf(conn,
-            "HTTP/1.1 200 OK\r\n"
-            "Content-Type: text/html\r\n"
-            "Content-Length: %ld\r\n"        // Always set Content-Length
-            "\r\n"
-            "%s",
-            content.size(), content.c_str());
+			"HTTP/1.1 200 OK\r\n"
+			"Content-Type: text/html\r\n"
+			"Content-Length: %ld\r\n"        // Always set Content-Length
+			"\r\n"
+			"%s",
+			content.size(), content.c_str());
 
   // We're done--close once data has been sent
   connection_done(conn);
