@@ -238,7 +238,14 @@ state_runner_t.prototype.make_user_VM=function(code,states)
 
 	VM.delay=function(ms) {
 		var t=VM.sequencer.block_start(VM);
+
 		if (VM.sequencer.current()) {
+            for(var key in VM.UI.elements){
+                var ele = VM.UI.elements[key] || undefined;
+                if(ele.type == "button" && VM.button(ele.name)){
+                    VM.sequencer.advance();
+                }
+            }
 			if (!t.time)
 			{ // starting a delay
 				t.time=VM.time+ms;
