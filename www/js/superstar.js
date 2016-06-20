@@ -48,8 +48,9 @@ function superstar_generic(robot,path,request,on_success,on_error)
 				{
 					try
 					{
-						console.log("Network "+url+" -> "+xhr.responseText);
-						on_success(xhr.responseText);
+						//console.log("Network "+url+" -> "+xhr.responseText);
+						if(on_success)
+							on_success(xhr.responseText);
 					}
 					catch(error)
 					{

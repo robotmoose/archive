@@ -25,7 +25,7 @@
 		  <br>
 		  <br>
 <pre>
-state = <i>"turnLeft"</i>
+state = "turnLeft"
 </pre>
 		Switches to your state named <i>turnLeft</i>.
 		<br>
@@ -58,22 +58,23 @@ label("string")
 		<br>
 		<br>
 <pre>
-button("<i>Lefty!</i>", <i>"turnLeft"</i>)
+button("Lefty!", "turnLeft")
 </pre>
-		Creates a button in the UI panel called "<i>Lefty!</i>".
+		Creates a button in the UI panel called <i>Lefty!</i>.
 		  Pressing this button will run the state named <i>turnLeft</i>.
 		<br>
 		<br>
 <pre>
 checkbox("string")
 </pre>
-		String is the checkbox's title.
+		Creates a checkbox called <i>string</i>. The value of the checkbox is true or false depending on whether it is
+		checked or unchecked, so it can be used as a condition in an "if" statement: if (checkbox("string")) ...
 		<br>
 		<br>
 		<pre>
 checkbox("string", "store.v")
 </pre>
-		If the box is checked, the variable store.v is true. If the box is unchecked, it is false.
+		If the box is checked, the value of store.v is set to true. If the box is unchecked, it is set to false.
 		<br>
 		<br>
 <pre>
@@ -157,7 +158,6 @@ power.neopixel[0].repeat = 4
 power.neopixel[0].start = time/250
 </pre>
 		Animates a bright red accent on a dim white background.
-		<br>
 		<br>
 		<br>
 				<h4>Variables</h4>

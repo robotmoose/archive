@@ -1,4 +1,6 @@
 
+
+
 Bottom plywood: 
 	3/4 inch thick
 	10 inches wide
@@ -15,7 +17,8 @@ Electrical Metallic Tubing (EMT), 3/4 inch (nominal), 23.5mm (actual)
 	2x 32 inch long slanted uprights; slant angle is 11 degrees from vertical
 
 
-22.75 inch 3/8" (or 7/16" if available) steel axle; both ends cross-drilled for retaining clips.
+Axle:
+	22.75 inch 3/8" (or 7/16" if available) steel axle; both ends cross-drilled for retaining clips.
 
 
 

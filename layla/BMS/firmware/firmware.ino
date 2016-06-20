@@ -75,6 +75,10 @@ byte packet[18]={0};           // used for PEC calc
 //byte PECbyte;                // PEC of a byte
 //byte PECpacket;              // PEC of packet
 //byte PECpacketREAD;          // value that PECpacket should be as read from 6803
+
+// Debug Variables
+bool debug = false;
+uint32_t time_debug = 0;
 //---------------------------------------------------------------------------------------------------------------------
 
 //int x=0;
@@ -270,9 +274,9 @@ void Charge()    // Function to turn on charging and cell balancing
 void BatteryCritical()
 {
   // Artificially set to test if statements:
-  //cellVoltage[0] = 4.5;
-  //cellVoltage[1] = 4.5;
-  //cellVoltage[2]=  4.5;
+  //cellVoltage[0] = 4.16;
+  //cellVoltage[1] = 4.16;
+  //cellVoltage[2]=  4.16;
   if ((cellVoltage[0] + cellVoltage[1] + cellVoltage[2]) == 0)
   {
     digitalWrite(OK_PIN, LOW);
@@ -405,11 +409,40 @@ void loop()
   ADCconvert();
   getCellVolts();
   cellVoltage[3]=CellConvert(BitShiftCombine(RawData[1], RawData[0]), BitShiftCombine(RawData[2], RawData[1]), BitShiftCombine(RawData[4], RawData[3]));
+
+  if(Serial.available() > 0) {
+    char command = Serial.read();
+    if(command == 'D') debug = true;
+    time_debug = millis();
+  }
+
+  if(debug) {
+    if(millis() - time_debug < 1000) {
+      cellVoltage[0] = 4.16;
+    }
+    else if(millis() - time_debug < 2000) {
+      cellVoltage[1] = 4.16;
+    }
+    else if(millis() - time_debug < 3000) {
+      cellVoltage[2]=  4.16;
+    }
+    else if (millis() - time_debug < 4000) {
+      cellVoltage[0] = 4.16;
+      cellVoltage[1] = 4.16;
+      cellVoltage[2]=  4.16;  
+    }
+    else {
+      debug = false;
+    }
+  }
+  
   BatteryCritical();
   AvgerageCell();
   totalCell();
   Charge();
 
+  
+  
   Serial.print("Charge flag: ");
   Serial.println(chargeflag,3);
 
