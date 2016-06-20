@@ -124,5 +124,5 @@ drag_list_t.prototype.remove_entry=function(entry)
 
 drag_list_t.prototype.refresh_entries_m=function()
 {
-	$("ul.sortable_handle").sortable({handle:'.glyphicon'});
+	$("ul.sortable_handle").sortable({handle:'.glyphicon-move'});
 }

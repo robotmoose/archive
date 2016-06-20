@@ -61,6 +61,8 @@ function state_table_t(doorway)
 	this.createnew.label.style="col-sm-2 control-label";
 	this.createnew.label.style.color="#800000";
 
+	this.load_file_modal=new modal_loadstate_t(this.doorway.parent_div, this);
+
 	this.make_error_span=function(text)
 	{
 		var errors=document.createElement("span");
@@ -90,6 +92,7 @@ function state_table_t(doorway)
 	this.run_button=document.createElement("input");
 	this.new_button=document.createElement("input");
 	this.add_button=document.createElement("input");
+	this.load_file_button=document.createElement("input");
 	this.entries=[];
 
 	if(!this.drag_list)
@@ -150,6 +153,16 @@ function state_table_t(doorway)
 		_this.createnew.name.focus();
 	};
 	this.controls_div.appendChild(this.new_button);
+
+	this.load_file_button.type="button";
+	this.load_file_button.className="btn btn-primary";
+	this.load_file_button.style.float="right";
+	this.load_file_button.style.marginLeft=10;
+	this.load_file_button.disabled=false;
+	this.load_file_button.value="Load State from File";
+	this.load_file_button.title="Click here to load a state from a local file.";
+	this.load_file_button.onclick=function(event){_this.load_file_button_pressed_m();};
+	this.controls_div.appendChild(this.load_file_button);
 
 	this.add_button.type="button";
 	this.add_button.className="btn btn-primary";
@@ -547,15 +560,6 @@ state_table_t.prototype.clear=function()
 	this.drag_list.clear();
 }
 
-
-
-
-
-
-
-
-
-
 state_table_t.prototype.download_m=function(robot,callback)
 {
 	var _this=this;
@@ -594,6 +598,18 @@ state_table_t.prototype.add_button_pressed_m=function()
 		state_name="start";
 
 	this.create_entry(state_name,"","// JavaScript code\n",true);
+}
+
+state_table_t.prototype.load_file_button_pressed_m=function()
+{
+	this.onstop_m();
+
+	var state_name="";
+
+	if(this.get_states().length==0)
+		state_name="start";
+
+	this.load_file_modal.modal.show();
 }
 
 state_table_t.prototype.load_button_pressed_m=function()
@@ -658,6 +674,7 @@ state_table_t.prototype.create_entry_m=function(entry,state,time,code)
 	entry.input.glyph=document.createElement("span");
 	entry.input.text=document.createElement("input");
 	entry.time=document.createElement("input");
+	entry.download_button=document.createElement("span");
 
 	entry.table.row.style.verticalAlign="middle";
 	entry.table.left.style.paddingRight=10;
@@ -683,8 +700,6 @@ state_table_t.prototype.create_entry_m=function(entry,state,time,code)
 
 	entry.input.glyph.className="glyphicon form-control-feedback glyphicon glyphicon-remove";
 	entry.input.div.appendChild(entry.input.glyph);
-
-	entry.table.left.appendChild(document.createElement("br"));
 
 	entry.time.type="text";
 	entry.time.placeholder="Run Time (ms)";
@@ -722,6 +737,30 @@ state_table_t.prototype.create_entry_m=function(entry,state,time,code)
 	entry.code_editor.setSize(500);
 	entry.code_editor_event=function(event){entry.code_editor.refresh();};
 	window.addEventListener("click",entry.code_editor_event);
+
+	entry.download_button.className="glyphicon glyphicon-download-alt";
+	entry.download_button.style.display="inline-block";
+	entry.download_button.style.width="100%";
+	entry.download_button.style.marginTop="5px";
+	entry.download_button.style.textAlign="center";
+	entry.download_button.style.cursor="pointer";
+	entry.download_button.style.color="#ccc";
+	entry.download_button.onmouseover=function(event) {
+		  event.target.style.color="#aaa";
+	};
+	entry.download_button.onmouseout=function(event) {
+		    event.target.style.color="#ccc";
+	};
+	entry.download_button.onclick=function(event) {
+		var code = entry.code_editor.getValue();
+		var fake_link = document.createElement("a");
+		fake_link.download = state + '.js';
+		fake_link.href = URL.createObjectURL(new Blob([code]));
+		document.body.appendChild(fake_link);
+		fake_link.click();
+		document.body.removeChild(fake_link);
+	}
+	entry.table.left.appendChild(entry.download_button);
 
 	this.refresh_m();
 }
