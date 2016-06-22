@@ -137,6 +137,20 @@ void send_json(struct mg_connection *conn,std::string json)
 	connection_done(conn);
 }
 
+//  Same as send_json, but returns 401 Not Authorized.
+void send_json_auth_error(struct mg_connection *conn,std::string json)
+{
+	mg_printf(conn,
+		"HTTP/1.1 401 Not Authorized\r\n"
+		"Content-Type: text/json\r\n"
+		"Content-Length: %ld\r\n"        // Always set Content-Length
+		"\r\n"
+		"%s",
+		json.size(), json.c_str());
+
+	connection_done(conn);
+}
+
 /**
   This is the key-value "database" of everything stored by superstar.
   Eventually it would be nice to persist this to disk, and keep history, although
@@ -507,9 +521,11 @@ bool write_is_authorized(std::string starpath,
 
 // This function will be called by mongoose on every new request.
 void superstar_http_handler(struct mg_connection *conn, int ev,void *param) {
-  if (ev==MG_EV_CLOSE) {
-	superstar_db.connection_closing(conn);
-  }
+	bool auth_error = false;
+
+	if (ev==MG_EV_CLOSE) {
+		superstar_db.connection_closing(conn);
+	}
   if (ev!=MG_EV_HTTP_REQUEST) return; // not a request? not our problem
   // else it's an http request
   struct http_message *m=(struct http_message *)param;
@@ -590,6 +606,7 @@ void superstar_http_handler(struct mg_connection *conn, int ev,void *param) {
 			}
 			else
 			{
+				auth_error = true;
 				content+="AUTHENTICATION MISMATCH";
 				printf("  Authentication mismatch: append to '%s' not authorized by '%s'\n",
 					starpath.c_str(),sentauth);
@@ -631,6 +648,7 @@ void superstar_http_handler(struct mg_connection *conn, int ev,void *param) {
 			}
 			else
 			{
+				auth_error = true;
 				content+="AUTHENTICATION MISMATCH";
 				printf("  Authentication mismatch: trim to '%s' not authorized by '%s'\n",
 					starpath.c_str(),sentauth);
@@ -655,6 +673,7 @@ void superstar_http_handler(struct mg_connection *conn, int ev,void *param) {
 		}
 		else
 		{
+			auth_error = true;
 			content+="AUTHENTICATION MISMATCH";
 			printf("  Authentication mismatch: write to '%s' not authorized by '%s'\n",
 				starpath.c_str(), sentauth);
@@ -697,7 +716,11 @@ void superstar_http_handler(struct mg_connection *conn, int ev,void *param) {
 					bufLoc=nextComma+1;
 			}
 			retArray+="]";
-			send_json(conn,retArray);
+			if (auth_error) {
+				send_json_auth_error(conn, retArray);
+			} else {
+				send_json(conn,retArray);
+			}
 			return;
 		}
 	}
@@ -751,13 +774,23 @@ void superstar_http_handler(struct mg_connection *conn, int ev,void *param) {
   content+="</BODY></HTML>";
 
   // Send human-readable HTTP reply to the client
-  mg_printf(conn,
-			"HTTP/1.1 200 OK\r\n"
-			"Content-Type: text/html\r\n"
-			"Content-Length: %ld\r\n"        // Always set Content-Length
-			"\r\n"
-			"%s",
-			content.size(), content.c_str());
+	if (auth_error) {
+		mg_printf(conn,
+				"HTTP/1.1 401 Not Authorized\r\n"
+				"Content-Type: text/html\r\n"
+				"Content-Length: %ld\r\n"        // Always set Content-Length
+				"\r\n"
+				"%s",
+				content.size(), content.c_str());
+	} else {	
+		mg_printf(conn,
+				"HTTP/1.1 200 OK\r\n"
+				"Content-Type: text/html\r\n"
+				"Content-Length: %ld\r\n"        // Always set Content-Length
+				"\r\n"
+				"%s",
+				content.size(), content.c_str());
+	}
 
   // We're done--close once data has been sent
   connection_done(conn);
