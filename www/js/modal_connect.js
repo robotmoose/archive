@@ -11,7 +11,9 @@ function modal_connect_t(div)
 	this.year_select=document.createElement("select");
 	this.school_select=document.createElement("select");
 	this.robot_select=document.createElement("select");
+	this.robot_auth_group=document.createElement("div");
 	this.robot_auth=document.createElement("input");
+	this.robot_auth_span=document.createElement("span");
 	this.connect_button=document.createElement("input");
 	this.cancel_button=document.createElement("input");
 
@@ -43,6 +45,9 @@ function modal_connect_t(div)
 
 	this.modal.get_content().appendChild(document.createElement("br"));
 
+	this.robot_auth_group.className="form-group has-feedback";
+	this.modal.get_content().appendChild(this.robot_auth_group);
+
 	this.robot_auth.className="form-control";
 	this.robot_auth.type="password";
 	this.robot_auth.placeholder="Enter robot authentication";
@@ -51,10 +56,14 @@ function modal_connect_t(div)
 		if(event.keyCode==13)
 			_this.connect_button.click();
 	};
-	this.modal.get_content().appendChild(this.robot_auth);
+	this.robot_auth_group.appendChild(this.robot_auth);
 
-	this.modal.get_content().appendChild(document.createElement("br"));
-
+	this.auth_error_str="Authentication error connecting to Superstar!\nMake sure your password is correct.";
+	this.robot_auth_span.innerHTML=this.auth_error_str;
+	this.robot_auth_span.style.color="#800000";
+	this.robot_auth_span.style.background="#ffa0a0";
+	this.robot_auth_span.style.visibility="hidden";
+	this.robot_auth_group.appendChild(this.robot_auth_span);
 
 	this.connect_button.className="btn btn-primary";
 	this.connect_button.disabled=true;
@@ -68,25 +77,30 @@ function modal_connect_t(div)
 		robot.school=get_select_value(_this.school_select);
 		robot.name=get_select_value(_this.robot_select);
 		robot.auth=_this.robot_auth.value;
+		_this.robot_auth.value="";
 
 		// Remember selections for later using localStorage API
 		localStorage.previous_year = robot.year;
 		localStorage.previous_school = robot.school;
 		localStorage.previous_robot = robot.name;
-	
+
 		// Check connection validity
 		superstar_set(robot, 'authtest', 'authtest', function() {
 			if(_this.onconnect) _this.onconnect(robot);
 			_this.hide();
 		}, function(err) {
 			// window.alert("GOSH!");
-			if (err.includes("(status 401)")) {
-        $.notify({
-					message: "Authentication error connecting to Superstar!\nMake sure your password is correct."}, {
-					type: 'danger',
-					z_index: 1050
-				});
-      } else {
+			if (err.includes("(status 401)"))
+			{
+				_this.robot_auth_group.className="form-group has-feedback has-error";
+				_this.robot_auth_span.style.visibility="visible";
+				_this.robot_auth.focus();
+				/*$.notify({
+						message: _this.auth_error_str}, {
+						type: 'danger',
+						z_index: 1050
+					});*/
+			} else {
 				$.notify({
 					message: "Error connecting to Superstar: " + err
 				}, {
@@ -136,6 +150,8 @@ modal_connect_t.prototype.show=function()
 modal_connect_t.prototype.hide=function()
 {
 	this.modal.hide();
+	this.robot_auth_group.className="form-group has-feedback";
+	this.robot_auth_span.style.visibility="hidden";
 }
 
 modal_connect_t.prototype.build_year_list_m=function()
@@ -155,11 +171,10 @@ modal_connect_t.prototype.build_year_list_m=function()
 		this.year_select.appendChild(option);
 	}
 
-	if (localStorage.previous_year) {
+	if (localStorage.previous_year)
 		this.year_select.value = localStorage.previous_year;
-	} else if(this.years.length>0) {
+	else if(this.years.length>0)
 		this.year_select.selectedIndex=1;
-	}
 
 	this.update_disables_m();
 }
@@ -190,9 +205,8 @@ modal_connect_t.prototype.build_school_list_m=function()
 					{
 						var option=document.createElement("option");
 						option.text=_this.schools[key];
-						if (localStorage.previous_school == option.text) {
+						if (localStorage.previous_school == option.text)
 							option.selected = true;
-						}
 						_this.school_select.appendChild(option);
 					}
 
@@ -225,11 +239,10 @@ modal_connect_t.prototype.build_robot_list_m=function()
 		this.update_disables_m();
 		var school = "";
 
-		if (this.school_select.selectedIndex == 0 && localStorage.previous_school) {
+		if (this.school_select.selectedIndex == 0 && localStorage.previous_school)
 			school = localStorage.previous_school;
-		} else if (this.school_select.selectedIndex!=0) {
+		else if (this.school_select.selectedIndex!=0)
 			school = get_select_value(this.school_select);
-		}
 
 		if(school != "")
 			superstar_sub(null,get_select_value(this.year_select)+"/"+school,
