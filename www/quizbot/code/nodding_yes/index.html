@@ -18,116 +18,101 @@
 
 			<div class="well">
 				<h4>Step 1:</h4>
-				Start by playing with the Sliders in the Drive tab. Figure out which one controls the Servo that moves the head up and down.
+				Start by playing with the sliders in the Drive tab. Figure out which one controls the servo that moves the head up and down.
 				<br/><br/>
-				<center><img src="images/01.png" style="width:100%;max-width:600px;"></img></center>
+				<center><img src="images/01.png" style="width:100%;max-width:700px;"></img></center>
 				<br/>
 
 				<h4>Step 2:</h4>
-				In our example, the up down Servo is on Pin 9 (or the top Slider). If yours is on the bottom Slider, you can swap it in two ways:
+				In our example, the up-down servo is on Pin 10 (or the bottom slider). If yours is on the top slider, you can swap it in two ways:
 				<br/><br/>
-				You could change the Hardware, and switch Pins.
+				You could physically swap the pins on the Arduino board.
 				<br/><br/>
-				Or, you could swap the order of the Servos in the Configure tab by dragging the Cross, and clicking the Configure button again, like below.
-				<center><img src="images/02.png" style="width:100%;max-width:600px;"></img></center>
+				Or, you could swap the order of the servos in the Configure tab by dragging the cross and clicking "Configure" again.
+				<br/><br/>
+				<center><img src="images/02.png" style="width:100%;max-width:700px;"></img></center>
 				<br/>
 
 				<h4>Step 3:</h4>
-				Since the up down Servo is Pin 9, we will swap ours back, but leave yours swapped if it is Pin 10.
+				Since the up-down servo is Pin 10, we will swap ours back, but leave yours swapped if it is Pin 9.
 				<br/><br/>
-				<center><img src="images/01.png" style="width:100%;max-width:600px;"></img></center>
+				<center><img src="images/01.png" style="width:100%;max-width:700px;"></img></center>
 				<br/>
 
 				<h4>Step 4:</h4>
-				Now we will switch to the Code tab.
+				Now switch to the Code tab.
 				<br/><br/>
-				Now would be a good time to resize your window so you can see all of the Code window.
+				You should resize your browser window so you can see all of the Code window.
 				<br/><br/>
-				<center><img src="images/03.png" style="width:100%;max-width:877px;"></img></center>
+				<center><img src="images/03.png" style="width:100%;max-width:700px;"></img></center>
 				<br/>
 
 				<h4>Step 5:</h4>
-				Let's start off by setting the name of the Experiment. Let's call it nod_yes
+				Click "New" to create a new experiment. In our example we call it "nod_yes".
 				<br/><br/>
-				<center><img src="images/04.png" style="width:100%;max-width:877px;"></img></center>
+				<center><img src="images/04.png" style="width:100%;max-width:700px;"></img></center>
 				<br/>
 
 				<h4>Step 6:</h4>
-				Next, use the "start" State to center the Servos.
+				Next, use the "start" state to move the servos to the starting position.
 				<br/><br/>
-				The Servo centers used on our Quizbot are 30, for the up down Servo, and 90 for the left right Servo.
+				For our example we set the up-down servo to 160 degrees and the left-right servo to 90 degrees.
 				<br/><br/>
-				These are more than likely different for your Quizbot!
-				<br/><br/>
-				<center><img src="images/05.png" style="width:100%;max-width:877px;"></img></center>
+				<center><img src="images/05.png" style="width:100%;max-width:700px;"></img></center>
 				<br/>
 
 				<h4>Step 7:</h4>
-				Save and Run the Experiment by clicking the Run button.
+				Save and run the experiment by clicking the Run button.
 				<br/><br/>
-				Your Servos should now be centered!
+				Your servos should now be centered so that your Quizbot is in its starting position, facing forward and up.
 				<br/><br/>
-				<center><img src="images/06.png" style="width:100%;max-width:877px;"></img></center>
+				Your servos may be different, so if your Quizbot is not in this position, you may need to try other starting angles in the previous step.
+				<br/><br/>
+				<center><img src="images/06.png" style="width:100%;max-width:700px;"></img></center>
 				<br/>
 
 				<h4>Step 8:</h4>
-				Hit the Stop button. Add a new State by hitting the Add State button. Name this State "up".
+				Click the Stop button. Add a new state by hitting the Add State button. Name this state "nod".
 				<br/><br/>
-				<center><img src="images/07.png" style="width:100%;max-width:877px;"></img></center>
+				<center><img src="images/07.png" style="width:100%;max-width:700px;"></img></center>
 				<br/>
 
 				<h4>Step 9:</h4>
-				Change the Run Time in the start State to 1000. This makes the start State run for 1000 ms (or 1 second).
+				In the "nod" state, set the up-down servo to a different angle to make the Quizbot nod. For our Quizbot, we used 90 degrees. 
 				<br/><br/>
-				Change the code in the up State to make the up down Servo move up.
-				<br/><br/>
-				<center><img src="images/08.png" style="width:100%;max-width:877px;"></img></center>
+				<center><img src="images/08.png" style="width:100%;max-width:700px;"></img></center>
 				<br/>
 
 				<h4>Step 10:</h4>
-				Save and Run the Experiment by clicking the Run button.
+				In the "start" state, add the command <i>delay(1000)</i>. This makes the Quizbot pause in the starting position for 1 second (1000 milliseconds).
 				<br/><br/>
-				The Quizbot should now center for 1000 ms, and then move up.
+				Below that, add the line of code <i>state = "nod"</i>. This will change the state to the "nod" state.
 				<br/><br/>
-				<center><img src="images/09.png" style="width:100%;max-width:877px;"></img></center>
+				Click "Run". The Quizbot should now wait one second in the starting position, then lower its head.
+				<br/><br/>
+				<center><img src="images/09.png" style="width:100%;max-width:700px;"></img></center>
 				<br/>
 
 				<h4>Step 11:</h4>
-				Hit the Stop button. Add a new State by clicking the Add State button. Call this State "down".
+				Click the Stop button.
 				<br/><br/>
-				Copy and paste the code from the up State, and make the code move the up down Servo down.
+				In the "nod" state, add the command <i>delay(1000)</i>. This will make the Quizbot pause in the "nod" state for one second.
 				<br/><br/>
-				Finally, set the Run Time for the up State to 1000 ms.
+				Below that, add the line <i>state = "start"</i> to make the Quizbot return to the starting position after nodding.
 				<br/><br/>
-				<center><img src="images/10.png" style="width:100%;max-width:877px;"></img></center>
+				<center><img src="images/10.png" style="width:100%;max-width:700px;"></img></center>
 				<br/>
 
 				<h4>Step 12:</h4>
-				Save and Run the Experiment by clicking the Run button.
+				Your code is now complete. Click "Run" to watch the Quizbot nod its head up and down. It will continue until you click "Stop".
 				<br/><br/>
-				The Quizbot should now center for 1000 ms, move up for 1000 ms, and, finally, move down.
+				Your code is saved whenever you click "Run", so you can open it again whenever you connect to this robot.
 				<br/><br/>
-				<center><img src="images/11.png" style="width:100%;max-width:877px;"></img></center>
-				<br/>
-
-				<h4>Step 13:</h4>
-				Hit the Stop button. Add one last State by clicking the Add State button. Call this State "stop".
-				<br/><br/>
-				Copy the code from the start State into this state. Set the Run Time for the down State to 1000 ms.
-				<br/><br/>
-				<center><img src="images/12.png" style="width:100%;max-width:877px;"></img></center>
-				<br/>
-
-				<h4>Step 14:</h4>
-				Save and Run the Experiment by clicking the Run button.
-				<br/><br/>
-				The Quizbot should now center for 1000 ms, move up for 1000 ms, move down for 1000 ms, and, finally, center.
-				<br/><br/>
-				<center><img src="images/13.png" style="width:100%;max-width:877px;"></img></center>
+				<center><img src="images/11.png" style="width:100%;max-width:700px;"></img></center>
 				<br/>
 
 				<h4>Challenge:</h4>
-				Can you make a new Experiment named shake_no that shakes Quizbot's head no?
+				Can you make a new experiment named shake_no that shakes Quizbot's head no?
 				<br/><br/>
 
 				<center><a href="../nodding_yes_3_times/"><h4>Next: Nodding Yes 3 Times</h4></a></center>
