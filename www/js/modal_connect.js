@@ -73,11 +73,28 @@ function modal_connect_t(div)
 		localStorage.previous_year = robot.year;
 		localStorage.previous_school = robot.school;
 		localStorage.previous_robot = robot.name;
-
-		if(_this.onconnect)
-			_this.onconnect(robot);
-
-		_this.hide();
+	
+		// Check connection validity
+		superstar_set(robot, 'authtest', 'authtest', function() {
+			if(_this.onconnect) _this.onconnect(robot);
+			_this.hide();
+		}, function(err) {
+			// window.alert("GOSH!");
+			if (err.includes("(status 401)")) {
+        $.notify({
+					message: "Authentication error connecting to Superstar!\nMake sure your password is correct."}, {
+					type: 'danger',
+					z_index: 1050
+				});
+      } else {
+				$.notify({
+					message: "Error connecting to Superstar: " + err
+				}, {
+					type: 'danger',
+					z_index: 1050
+				});
+      }
+		})
 	};
 	this.modal.get_footer().appendChild(this.connect_button);
 
