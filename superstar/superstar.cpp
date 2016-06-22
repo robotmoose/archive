@@ -137,11 +137,11 @@ void send_json(struct mg_connection *conn,std::string json)
 	connection_done(conn);
 }
 
-//  Same as send_json, but returns 401 Not Authorized.
+//  Same as send_json, but returns 401 Unauthorized.
 void send_json_auth_error(struct mg_connection *conn,std::string json)
 {
 	mg_printf(conn,
-		"HTTP/1.1 401 Not Authorized\r\n"
+		"HTTP/1.1 401 Unauthorized\r\n"
 		"Content-Type: text/json\r\n"
 		"Content-Length: %ld\r\n"        // Always set Content-Length
 		"\r\n"
@@ -776,7 +776,7 @@ void superstar_http_handler(struct mg_connection *conn, int ev,void *param) {
   // Send human-readable HTTP reply to the client
 	if (auth_error) {
 		mg_printf(conn,
-				"HTTP/1.1 401 Not Authorized\r\n"
+				"HTTP/1.1 401 Unauthorized\r\n"
 				"Content-Type: text/html\r\n"
 				"Content-Length: %ld\r\n"        // Always set Content-Length
 				"\r\n"
