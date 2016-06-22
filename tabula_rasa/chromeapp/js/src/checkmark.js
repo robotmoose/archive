@@ -17,7 +17,7 @@ function checkmark_t(el)
 	this.table.rows[0].cells[1].style.paddingLeft=this.table.rows[0].cells[1].style.paddingRight="5px";
 	this.el.appendChild(this.table);
 	this.check_img=this.make_img("/images/check.png");
-	this.cross_img=this.make_img("/images/cross.png");
+	this.cross_img=this.make_img("/images/exclamation.png");
 	this.show_m(this.cross_img);
 }
 
