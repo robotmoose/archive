@@ -112,7 +112,6 @@ function gui_t(div)
 	this.serial_selector.el.appendChild(this.fullscreen_button);
 	this.fullscreen_button.type="button";
 	this.fullscreen_button.value="Enter Fullscreen";
-	this.fullscreen_button.style.marginLeft="1px";
 	this.fullscreen_button.style.width="49.75%";
 	this.fullscreen_button.onclick=function()
 	{
