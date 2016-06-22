@@ -53,6 +53,7 @@ byte CFGR1=0x00;
 #define SS_PIN        10   // Designate Chip select pin ***Change this to pin 53 when uploading to Mega***
 #define CHARGE_INPUT  7    // Will be pulled high when AC power is available
 #define CHARGE_RELAY  9    // Set to high to turn on charging relay
+#define CHARGE_LED_PIN 5
 #define POWER         6    // Power pin for BMS shield
 #define ADDRESS       0x02 // Designate Chip address: 10000000
 #define OK_PIN        8    // OK signal for system power
@@ -92,6 +93,7 @@ void setup()
   pinMode(SS_PIN, OUTPUT);
   pinMode(CHARGE_INPUT, INPUT);
   pinMode(CHARGE_RELAY, OUTPUT);
+  pinMode(CHARGE_LED_PIN, OUTPUT);
   digitalWrite(SS_PIN, HIGH); // Chip Deselect
 
   // SPI Configuration: MSB First, CPOL = 1, CPHA = 1, DIV16 = 1Mhz
@@ -250,6 +252,7 @@ void Charge()    // Function to turn on charging and cell balancing
   if (digitalRead(CHARGE_INPUT) == HIGH)
   {
     Serial.println("Charger Connected");
+    digitalWrite(CHARGE_LED_PIN, HIGH);
     //If a single cell's voltage is greater than the absolute max, turns off charging
     if ((cellVoltage[0] >= ABS_max) || (cellVoltage[1] >= ABS_max) || (cellVoltage[2] >= ABS_max))
     {
@@ -266,6 +269,7 @@ void Charge()    // Function to turn on charging and cell balancing
   else if (digitalRead(CHARGE_INPUT) == LOW)
   {
     Serial.println("Charger Disconnected");
+    digitalWrite(CHARGE_LED_PIN, LOW);
     digitalWrite(CHARGE_RELAY, LOW);
     chargeflag=0;
   }
