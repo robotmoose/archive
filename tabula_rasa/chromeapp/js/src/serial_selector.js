@@ -38,7 +38,7 @@ function serial_selector_t(div,on_connect,on_disconnect,is_connectable)
 	this.el.appendChild(this.button);
 	this.button.type="button";
 	this.button.value="Connect";
-	this.button.style.width="49.75%"
+	this.button.style.width="50%"
 	this.button.onclick=function(){_this.button_m();};
 
 	this.interval=setInterval(function(){_this.update_list_m();},250);

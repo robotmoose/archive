@@ -5,6 +5,7 @@ function gui_t(div)
 
 	this.main_div=document.createElement("div");
 	maximize(this.main_div);
+	this.main_div.style.paddingRight="1px";
 
 	var _this=this;
 
@@ -112,7 +113,7 @@ function gui_t(div)
 	this.serial_selector.el.appendChild(this.fullscreen_button);
 	this.fullscreen_button.type="button";
 	this.fullscreen_button.value="Enter Fullscreen";
-	this.fullscreen_button.style.width="49.75%";
+	this.fullscreen_button.style.width="50%";
 	this.fullscreen_button.onclick=function()
 	{
 		_this.is_fullscreen=!_this.is_fullscreen;
