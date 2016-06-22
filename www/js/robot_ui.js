@@ -220,7 +220,6 @@ robot_ui_t.prototype.upload_gui=function()
 		superstar_set(this.robot,"gui",save);
 		this.gui.old=stringified;
 	}
-	console.log("save called")
 }
 
 robot_ui_t.prototype.create_widgets=function()
