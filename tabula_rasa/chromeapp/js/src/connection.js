@@ -18,6 +18,7 @@ function connection_t(on_message,on_disconnect,on_connect,on_name_set)
 	_this.max_command=15; // A-packet formatting
 	_this.max_short_length=15;
 	_this.robot=null;
+	_this.auth="";
 	_this.serial_delay_ms=50; // milliseconds to wait between sensors and commands (saves CPU, costs some latency though)
 
 	// Are there other serial JS apis?  maybe node.js?
@@ -128,8 +129,16 @@ connection_t.prototype.connected=function()
 connection_t.prototype.gui_robot=function(robot)
 {
 	var _this=this;
-	_this.robot=robot;
+	this.robot=robot;
+	this.robot.auth=this.auth;
 	if (_this.connected()) _this.reconnect();
+}
+
+// Callback to set auth
+connection_t.prototype.gui_auth=function(auth)
+{
+	this.auth = auth;
+	if (this.robot) this.robot.auth=auth;
 }
 
 // Callback from GUI

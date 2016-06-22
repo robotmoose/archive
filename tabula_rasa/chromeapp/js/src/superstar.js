@@ -1,12 +1,14 @@
 /**
   Superstar network interface
+  Talks to superstar server.
 
   robot fields:
   	superstar: string name of superstar server
   	name: string name of robot (URI encoded)
   	school: string name of robot's organization (URI encoded)
-  	auth: authentication code (password for robot)
+  	auth: authentication code (password for robot), or empty
 
+  This file is shared between the chrome app backend and web front end.
 */
 
 // Error handling code
@@ -16,10 +18,23 @@ function superstar_error(user_errorhandler,why_string)
 	if (user_errorhandler) user_errorhandler(why_string);
 }
 
+// Build the full request string for this path on this robot
+function superstar_path(robot,path) {
+	var fullpath="robots/";
+	if (robot.year) fullpath+=robot.year+"/";
+	if (robot.school) fullpath+=robot.school+"/";
+	if (robot.name) fullpath+=robot.name+"/";
+	if (path) fullpath+=path;
+	return fullpath;
+}
+
 // Generic string-in string-out network communication code.
-function superstar_generic(robot,path_and_request,on_success,on_error)
+function superstar_generic(robot,path,request,on_success,on_error)
 {
-	var url="http://"+robot.superstar+"/superstar/robots/"+robot.year+"/"+robot.school+"/"+robot.name+"/"+path_and_request;
+	var starpath=superstar_path(robot,path);
+	var url="";
+	if (robot.superstar) url="http://"+robot.superstar;
+	url+="/superstar/"+starpath+request;
 
 	try
 	{
@@ -33,7 +48,9 @@ function superstar_generic(robot,path_and_request,on_success,on_error)
 				{
 					try
 					{
-						on_success(xhr.responseText);
+						//console.log("Network "+url+" -> "+xhr.responseText);
+						if(on_success)
+							on_success(xhr.responseText);
 					}
 					catch(error)
 					{
@@ -60,13 +77,10 @@ function superstar_generic(robot,path_and_request,on_success,on_error)
 // Get JSON object from a robot path
 function superstar_get(robot,path,on_success,on_error)
 {
-	superstar_generic(robot,path+"?get",
+	superstar_generic(robot,path,"?get",
 		function(str) {
-			if(str=="")
-				str="{}";
-
-			var json=JSON.parse(str);
-
+			var json=null;
+			if(str!="") json=JSON.parse(str);
 			on_success(json);
 		}
 	,on_error);
@@ -78,7 +92,7 @@ function superstar_get(robot,path,on_success,on_error)
 function superstar_getnext(robot,path,on_success,on_error)
 {
 	var state={};
-	state.current="{}"; // current string value of path
+	state.current=""; // assume current string value of path is empty
 
 	// Fetch the next value from the server
 	state.getnext=function() {
@@ -86,17 +100,16 @@ function superstar_getnext(robot,path,on_success,on_error)
 		state.timeout=setTimeout(state.repeat,2*60*1000); // getnext will time out every 5 minutes, so repeat request every few minutes.
 
 		// Send off network request:
-		state.xhr=superstar_generic(robot,path+"?getnext="+encodeURIComponent(state.current),
+		state.xhr=superstar_generic(robot,path,"?getnext="+encodeURIComponent(state.current),
 			function(str) {
 				// Done with this request:
 				state.xhr=undefined;
 				state.abort_timeout();
 
-				if(str=="")
-					str="{}";
-
 				state.current=str;
-				state.json=JSON.parse(str);
+				if (str!="")
+					state.json=JSON.parse(str);
+				else state.json=null;
 
 				on_success(state.json);
 
@@ -139,11 +152,22 @@ function superstar_getnext(robot,path,on_success,on_error)
 // Write this object to this path
 function superstar_set(robot,path,json,on_success,on_error)
 {
-	var json_str=encodeURIComponent(JSON.stringify(json));
+	var json_str=JSON.stringify(json);
+	var auth=robot.auth;
+	if(!robot.auth)
+		auth="";
 
-	superstar_generic(robot,path+"?set="+json_str,
+	if (robot.auth) {
+		var starpath=superstar_path(robot,path);
+		var seq="0"; // <- fixme: fight replay by getting sequence number from server first
+		auth = "&auth="+getAuthCode(robot.auth,starpath,json_str,seq);
+		//console.log(path,"Authentication code "+auth);
+	}
+
+	json_str=encodeURIComponent(json_str);
+	superstar_generic(robot,path,"?set="+json_str+auth,
 		function(response) {
-			if (on_success) on_success(json);
+			if (on_success) on_success();
 		}
 	,on_error);
 }
@@ -153,8 +177,10 @@ function superstar_set(robot,path,json,on_success,on_error)
 //   Return them to on_success as an array of strings
 function superstar_sub(robot,path,on_success,on_error)
 {
-	superstar_generic(robot,path+"?sub",
+	if (!robot) robot={};
+	superstar_generic(robot,path,"?sub",
 		function(response) {
+			if (response=="") response="[]"; // empty array
 			var json=JSON.parse(response);
 			on_success(json);
 		}

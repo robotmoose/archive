@@ -48,9 +48,15 @@ function gui_t(div)
 		}
 
 	);
+
+	this.auth_input = new auth_input_t(
+			this.main_div,
+			function(auth) { _this.connection.gui_auth(auth) }
+			);
+
 	this.serial_selector=new serial_selector_t
 	(
-		this.name.el,
+		this.main_div,
 		function(port_name)
 		{
 			_this.connection.gui_connect(port_name);
@@ -66,6 +72,7 @@ function gui_t(div)
 				_this.name.get_robot().year!=null);
 		}
 	);
+
 	this.connection.on_name_set=function(robot)
 	{
 		_this.name.load(robot);
@@ -74,14 +81,6 @@ function gui_t(div)
 	this.connection.load();
 
 	this.status_viewer=new status_viewer_t(this.main_div);
-	this.name.el.appendChild(document.createElement("br"));
-
-	this.pilot_checkmark=new checkmark_t(this.name.el);
-	this.pilot_status_text=this.pilot_checkmark.getElement();
-	this.pilot_status_text.align="center";
-	this.pilot_status_text.style.fontSize="x-large";
-	this.pilot_status_text.innerHTML="Pilot connected";
-	this.name.el.appendChild(document.createElement("br"));
 
 	this.state_side_bar=document.createElement("div");
 
@@ -91,7 +90,7 @@ function gui_t(div)
 		panels:
 		[
 			{type:"left",resizable:true,content:this.gruveo_div,size:"60%"},
-			{type:"main",resizable:true,content:this.name.el},
+			{type:"main",resizable:true,content:this.main_div},
 			{type:"preview",resizable:true,content:this.status_viewer.el,size:"55%"}
 		]
 	});
@@ -114,6 +113,7 @@ function gui_t(div)
 	this.fullscreen_button.type="button";
 	this.fullscreen_button.value="Enter Fullscreen";
 	this.fullscreen_button.style.marginLeft="2px";
+	this.fullscreen_button.style.width="49%";
 	this.fullscreen_button.onclick=function()
 	{
 		_this.is_fullscreen=!_this.is_fullscreen;
@@ -136,6 +136,15 @@ function gui_t(div)
 	});
 
 	this.sound_player=new sound_player_t(this.name);
+
+	this.pilot_checkmark=new checkmark_t(this.main_div);
+	this.pilot_status_text=this.pilot_checkmark.getElement();
+	this.pilot_status_text.align="center";
+	this.pilot_status_text.style.fontSize="x-large";
+	this.pilot_status_text.innerHTML="Pilot connected";
+	this.main_div.appendChild(document.createElement("br"));
+
+
 }
 
 gui_t.prototype.destroy=function()
