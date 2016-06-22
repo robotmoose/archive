@@ -277,7 +277,14 @@ connection_t.prototype.arduino_send_options=function()
 		function() {
 			_this.status_message(" Sent option list to superstar");
 			_this.arduino_setup_devices();
-		}
+		},
+    function(err) {
+      if (err.includes("(status 401)")) {
+        _this.status_message("Authentication error connecting to Superstar!\nMake sure your password is correct.");
+      } else {
+        _this.status_message("Error connecting to Superstar: " + err);
+      }
+    }
 	);
 }
 
