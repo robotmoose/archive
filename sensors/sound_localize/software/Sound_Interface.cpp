@@ -14,7 +14,6 @@
 #include <array>
 #include <cstdio> // for std::printf & std::sprintf
 #include <utility> // for std::pair
-#include <cmath>
 #include "xcorr.h"
 #include "serial/serial.h"
 
@@ -28,10 +27,9 @@
 #define NUMSAMPLES_FFT 2271 // Number of samples to use for FFT. FFT resolution is fs/N.
 #define FS 16000.0 // Sampling frequency is twice max frequency
 
-//#define PI 3.14159265
-
 // Function Prototypes
 bool serial_init(serial::Serial & sp);
+void make_xcor_plans(fftw_plan & pa, fftw_plan & pb, fftw_plan & px);
 
 int main() {
 
@@ -56,54 +54,33 @@ int main() {
 		signalb[i][0] = std::stod(value);
 	}
 
+	// Since ffts and iffts will always be of the same length and type, create the plans only once to boost efficiency.
+    fftw_plan pa, pb, px;
+    make_xcor_plans(pa,pb,px); // pa and pb are fft of signal a and signal b, and px is ifft of xcor of a & b
+
 	// Benchmark cross correlation
 	std::uint64_t avg = 0;
-	for(int i=0; i<50; ++i) {
+	std::uint32_t numiters = 1000;
+	for(int i=0; i<numiters; ++i) {
 		auto begin = std::chrono::high_resolution_clock::now();
-		xcorr(signala, signalb, result, NUMSAMPLES_FFT);
+		//xcorr(signala, signalb, result, NUMSAMPLES_FFT);
+		xcorr(signala, signalb, result, NUMSAMPLES_FFT, pa, pb, px);
 		auto end = std::chrono::high_resolution_clock::now();
 		avg += std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count();
 		//std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count() << "ns" << std::endl;
 	}
-	std::cout << avg/50 << " ns avg" << std::endl;
+	std::cout << avg/numiters << " ns (Average of " << numiters << " iterations)" << std::endl;
 
 
 	for(int i=0; i<2*NUMSAMPLES_FFT-1; ++i) {
 		output << result[i][0] << "," << std::endl;
 	}
 
-	/*fftw_complex * signala_ext = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2*NUMSAMPLES_FFT-1));
-	fftw_complex * signalb_ext = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2*NUMSAMPLES_FFT-1));
-	fftw_complex * out_shifted = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2*NUMSAMPLES_FFT - 1));
-	fftw_complex * outa = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * NUMSAMPLES_FFT - 1));
-	fftw_complex * outb = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * NUMSAMPLES_FFT - 1));
-	fftw_complex * out = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * NUMSAMPLES_FFT - 1));
-
-	fftw_plan pa = fftw_plan_dft_1d(2 * NUMSAMPLES_FFT - 1, signala_ext, outa, FFTW_FORWARD, FFTW_ESTIMATE);
-	fftw_plan pb = fftw_plan_dft_1d(2 * NUMSAMPLES_FFT - 1, signalb_ext, outb, FFTW_FORWARD, FFTW_ESTIMATE);
-	fftw_plan px = fftw_plan_dft_1d(2 * NUMSAMPLES_FFT - 1, out, out_shifted, FFTW_BACKWARD, FFTW_ESTIMATE);
-
-	fftw_execute(pa);
-	fftw_execute(pb);
-
-	std::complex<double> * temp1;
-	std::complex<double> * temp2;
-	std::complex<double> * temp3;
-
-	temp1 = reinterpret_cast<std::complex<double> *>(out);
-	temp2 = reinterpret_cast<std::complex<double> *>(outa);
-	temp3 = reinterpret_cast<std::complex<double> *>(outb);
-	for (int i = 0; i < 2 * NUMSAMPLES_FFT - 1; i++)
-	  temp1[i] = temp2[i] * std::conj(temp3[i]);
-	out = reinterpret_cast<fftw_complex*>(&temp1);
-	fftw_execute(px);*/
-
-
-
-
-
-
-
+	// Clean up
+	fftw_destroy_plan(pa);
+	fftw_destroy_plan(pb);
+	fftw_destroy_plan(px);
+	fftw_cleanup();
 
 	// For Testing FFT
 	// double * y = new double[NUMSAMPLES_FFT];
@@ -352,6 +329,27 @@ bool serial_init(serial::Serial & sp) {
 		std::cout << "Serial port " + port + " is open." << std::endl;
 		return true;
 	}
+}
+
+void make_xcor_plans(fftw_plan & pa, fftw_plan & pb, fftw_plan & px) {
+    fftw_complex * signala_ext = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * NUMSAMPLES_FFT - 1));
+    fftw_complex * signalb_ext = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * NUMSAMPLES_FFT - 1));
+    fftw_complex * out_shifted = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * NUMSAMPLES_FFT - 1));
+    fftw_complex * outa = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * NUMSAMPLES_FFT - 1));
+    fftw_complex * outb = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * NUMSAMPLES_FFT - 1));
+    fftw_complex * out = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * NUMSAMPLES_FFT - 1));
+    fftw_complex * result = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * 2*NUMSAMPLES_FFT-1);
+
+    pa = fftw_plan_dft_1d(2 * NUMSAMPLES_FFT - 1, signala_ext, outa, FFTW_FORWARD, FFTW_MEASURE);
+    pb = fftw_plan_dft_1d(2 * NUMSAMPLES_FFT - 1, signalb_ext, outb, FFTW_FORWARD, FFTW_MEASURE);
+    px = fftw_plan_dft_1d(2 * NUMSAMPLES_FFT - 1, out, result, FFTW_BACKWARD, FFTW_MEASURE);
+
+    fftw_free(signala_ext);
+    fftw_free(signalb_ext);
+    fftw_free(out_shifted);
+    fftw_free(out);
+    fftw_free(outa);
+    fftw_free(outb);
 }
 
 // void parse_serial() {
