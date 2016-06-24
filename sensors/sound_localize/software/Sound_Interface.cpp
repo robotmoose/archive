@@ -4,7 +4,7 @@
 // UAF ITEST
 
 // Date Created: 5/31/2016
-// Last Modified: 6/6/2016
+// Last Modified: 6/23/2016
 
 #include <string>
 #include <cstdint>
@@ -15,16 +15,301 @@
 #include <cstdio> // for std::printf & std::sprintf
 #include <utility> // for std::pair
 #include <cmath>
+#include "xcorr.h"
 #include "serial/serial.h"
-#include <fftw3.h>
+
+//#include <complex>
+//#include <fftw3.h>
 
 #include <fstream>
 
-#define NUMSAMPLES_FFT 8192 // Number of samples to use for FFT. FFT resolution is fs/N.
+#include <chrono> // For timing
+
+#define NUMSAMPLES_FFT 2271 // Number of samples to use for FFT. FFT resolution is fs/N.
+#define FS 16000.0 // Sampling frequency is twice max frequency
+
+//#define PI 3.14159265
+
+// Function Prototypes
+bool serial_init(serial::Serial & sp);
 
 int main() {
 
-	// ********** Serial Port Setup Begin ********** //
+	// Setup and open the serial port.
+	//serial::Serial sp;
+	//serial_init(sp);
+
+	fftw_complex * signala = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * NUMSAMPLES_FFT);
+	fftw_complex * signalb = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * NUMSAMPLES_FFT);
+	fftw_complex * result = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * 2*NUMSAMPLES_FFT-1);
+
+	std::ifstream s1File ("s1.txt");
+	std::ifstream s2File ("s2.txt");
+
+	std::ofstream output ("output.csv", std::ios::out | std::ios::trunc);
+
+	for(int i=0; i<NUMSAMPLES_FFT; ++i) {
+		std::string value;
+		std::getline(s1File, value);
+		signala[i][0] = std::stod(value);
+		std::getline(s2File, value);
+		signalb[i][0] = std::stod(value);
+	}
+
+	// Benchmark cross correlation
+	std::uint64_t avg = 0;
+	for(int i=0; i<50; ++i) {
+		auto begin = std::chrono::high_resolution_clock::now();
+		xcorr(signala, signalb, result, NUMSAMPLES_FFT);
+		auto end = std::chrono::high_resolution_clock::now();
+		avg += std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count();
+		//std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count() << "ns" << std::endl;
+	}
+	std::cout << avg/50 << " ns avg" << std::endl;
+
+
+	for(int i=0; i<2*NUMSAMPLES_FFT-1; ++i) {
+		output << result[i][0] << "," << std::endl;
+	}
+
+	/*fftw_complex * signala_ext = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2*NUMSAMPLES_FFT-1));
+	fftw_complex * signalb_ext = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2*NUMSAMPLES_FFT-1));
+	fftw_complex * out_shifted = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2*NUMSAMPLES_FFT - 1));
+	fftw_complex * outa = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * NUMSAMPLES_FFT - 1));
+	fftw_complex * outb = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * NUMSAMPLES_FFT - 1));
+	fftw_complex * out = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * NUMSAMPLES_FFT - 1));
+
+	fftw_plan pa = fftw_plan_dft_1d(2 * NUMSAMPLES_FFT - 1, signala_ext, outa, FFTW_FORWARD, FFTW_ESTIMATE);
+	fftw_plan pb = fftw_plan_dft_1d(2 * NUMSAMPLES_FFT - 1, signalb_ext, outb, FFTW_FORWARD, FFTW_ESTIMATE);
+	fftw_plan px = fftw_plan_dft_1d(2 * NUMSAMPLES_FFT - 1, out, out_shifted, FFTW_BACKWARD, FFTW_ESTIMATE);
+
+	fftw_execute(pa);
+	fftw_execute(pb);
+
+	std::complex<double> * temp1;
+	std::complex<double> * temp2;
+	std::complex<double> * temp3;
+
+	temp1 = reinterpret_cast<std::complex<double> *>(out);
+	temp2 = reinterpret_cast<std::complex<double> *>(outa);
+	temp3 = reinterpret_cast<std::complex<double> *>(outb);
+	for (int i = 0; i < 2 * NUMSAMPLES_FFT - 1; i++)
+	  temp1[i] = temp2[i] * std::conj(temp3[i]);
+	out = reinterpret_cast<fftw_complex*>(&temp1);
+	fftw_execute(px);*/
+
+
+
+
+
+
+
+
+	// For Testing FFT
+	// double * y = new double[NUMSAMPLES_FFT];
+	// double * fft_result = new double[NUMSAMPLES_FFT];
+
+	// fftw_plan fft = fftw_plan_r2r_1d(
+	// 	NUMSAMPLES_FFT, 
+	// 	y, 
+	// 	fft_result, 
+	// 	FFTW_R2HC, 
+	// 	FFTW_MEASURE
+	// );
+	//double y[8192];
+	//double freq = 1500;
+	// for(int t=0; t<NUMSAMPLES_FFT/2; ++t) {
+	// 	y[t] = 1;
+	// }
+	// for(int t=NUMSAMPLES_FFT/2; t<NUMSAMPLES_FFT; ++t) {
+	// 	y[t] = 0;
+	// }
+	// int bit = 1;
+	// for(int t=0; t<NUMSAMPLES_FFT; ++t) {
+	// 	if(t%200 == 0) {
+	// 		bit ^= 1;
+	// 	}
+	// 	y[t] = bit;
+	// }
+
+	// char buff[50];
+	// std::ofstream output_time("output_time.csv", std::ios::out | std::ios::trunc);
+	// std::ofstream output_freq("output_freq.csv", std::ios::out | std::ios::trunc);
+
+	// for(int i=0; i<NUMSAMPLES_FFT; ++i) {
+	// 		std::sprintf(buff, "%f", y[i]);
+	// 		output_time << buff;			
+	// 	output_time << "\n";
+	// }
+
+
+	// fftw_execute_r2r(fft, y, fft_result);
+
+
+	// // Log the FFT outputs.
+	// for(int i=0; i<NUMSAMPLES_FFT; ++i) {
+	// 		std::sprintf(buff, "%f", fft_result[i]);
+	// 		output_freq << buff;			
+	// 	output_freq << "\n";
+	// }
+
+	// delete [] y;
+	// delete [] fft_result;
+
+	// ********** Data Parsing and Processing Setup Begin ********** // 
+	// // Variables and containers needed for parsing the serial data
+	// std::size_t num_streams = 5; // Number of data streams = number of microphones
+
+	// std::size_t data_length = num_streams*(2)+4; // 2 bytes per microphone + 4 bytes for time
+	// std::uint8_t buffer[100];
+	// std::uint32_t time_micros;
+	// std::vector<std::uint16_t> microphone_data(num_streams);
+
+	// std::uint16_t fs = 40000; // ADC Sampling Frequency
+	// // Number of samples to use for FFT. FFT resolution is fs/N.
+	// //std::size_t NUMSAMPLES_FFT = 8192;
+	// // Counts up to NUMSAMPLES_FFT, then triggers FFT. Is reset to N/2 so FFTs overlap.
+	// std::size_t fft_counter = 0;
+
+	//std::vector<std::array<double, NUMSAMPLES_FFT>> crossCorr_pairs(num_streams+1); // Stores cross correlation results
+	// 
+	// for(int i=0; i=num_streams+1; ++i) {
+	// 	for(int j=0; j<NUMSAMPLES_FFT; ++j) {
+	// 		crossCorr_pairs[i].push_back(double);
+	// 	}
+	// }
+
+
+	// Create a vector of data streams. Each data stream is a deque containing the received
+	//     microphone readings.
+	// std::vector<std::deque<std::uint16_t>> data_streams;
+	// for(int i=0; i<num_streams; ++i) {
+	// 	data_streams.push_back(std::deque<std::uint16_t>());
+	// }
+
+	// Open up files for data logging
+	// std::ofstream output_time("output_time.csv", std::ios::out | std::ios::trunc);
+	// std::ofstream output_freq("output_freq.csv", std::ios::out | std::ios::trunc);
+	// if(!(output_time.is_open()) || !(output_freq.is_open())) {
+	// 	std::cout << "Error: Unable to open log files!" << std::endl;
+	// 	return -1;
+	// }
+	// char buff[50];
+
+	// Set up mechanisms for FFT
+	// std::vector<std::pair<double *, double *>> fft_data;
+
+	// for(int i=0; i<num_streams; ++i) {
+	// 	fft_data.push_back(std::make_pair(
+	// 		(double*) fftw_malloc(sizeof(double) * NUMSAMPLES_FFT),
+	// 		(double*) fftw_malloc(sizeof(double) * NUMSAMPLES_FFT)
+	// 	));
+	// }
+
+	// // Create optimized plan for executing FFT
+	// fftw_plan fft = fftw_plan_r2r_1d(
+	// 	NUMSAMPLES_FFT, 
+	// 	fft_data[0].first, 
+	// 	fft_data[0].second, 
+	// 	FFTW_R2HC, 
+	// 	FFTW_MEASURE
+	// );
+
+	// // Create optimized plan for executing IFFT
+	// fftw_plan ifft = fftw_plan_r2r_1d(
+	// 	NUMSAMPLES_FFT, 
+	// 	fft_data[0].first, 
+	// 	fft_data[0].second, 
+	// 	FFTW_HC2R, 
+	// 	FFTW_MEASURE
+	// );
+
+	// ********** Data Parsing and Processing Setup End ********** // 
+
+	// std::size_t counter = 0;
+	// // ********** Main Program Loop ********** //
+	// while(true) {
+	// 	// Syncronize by reading CR (10) followed by LF (13)
+	// 	sp.read(buffer,1);
+	// 	if(buffer[0] == 10) {
+	// 		sp.read(buffer,1);
+	// 		if(buffer[0] == 13) { // Synchronized
+	// 			sp.read(buffer, data_length);
+	// 			++fft_counter;
+
+	// 			// Reconstruct time data
+	// 			time_micros = 0;
+	// 			for(int i=0; i<4; ++i) {
+	// 				time_micros += buffer[i] << 8*(3-i);
+	// 			}
+	// 			//std::printf("Time data: %u\n", time_micros);
+	// 			for(int i=0; i<num_streams; ++i) {
+	// 				microphone_data[i] = 0;
+	// 				// Reconstruct microphone data
+	// 				for(int j=0; j<2; ++j) {
+	// 					microphone_data[i] += buffer[4+j+i*2] << 8*(1-j);
+	// 				}
+	// 				// Store data for use with FFT
+	// 				data_streams[i].push_back(microphone_data[i]);
+	// 				if(data_streams[i].size() > NUMSAMPLES_FFT) data_streams[i].pop_front();
+					
+	// 				std::sprintf(buff, "%u,", microphone_data[i]);
+	// 				output_time << buff;
+	// 				//std::printf("Microphone data %d: %u\n", i, microphone_data[i]);
+	// 			}
+	// 			//std::printf("Counter: %lu\n", fft_counter);
+	// 			if(fft_counter >= NUMSAMPLES_FFT) {
+	// 				// Execute the Fourier transforms
+	// 				for(int i=0; i<num_streams; ++i) {
+	// 					for(int j=0; j<NUMSAMPLES_FFT; ++j) {
+	// 						// Copy microphone data over. This will convert int to double.
+	// 						fft_data[i].first[j] = (double) data_streams[i][j];
+	// // 					}
+	// 					fftw_execute_r2r(fft, fft_data[i].first, fft_data[i].second);
+	// 				}
+	// 				// Log the FFT outputs.
+	// 				for(int i=0; i<(NUMSAMPLES_FFT+1)/2; ++i) {
+	// 					for(int j=0; j<num_streams; ++j) {
+	// 						std::sprintf(buff, "%f,", fft_data[j].second[i]);
+	// 						output_freq << buff;			
+	// 					}
+	// 					output_freq << "\n";
+	// 				}
+
+	// 				// // For each adjacent FFT pair, calculate the cross correlation.
+	// 				// for(int i=0; i<num_streams+1; ++i) {
+	// 				// 	if(i!=num_streams) {
+	// 				// 		for(int j=0; j<NUMSAMPLES_FFT; ++j) {
+	// 				// 			crossCorr_pairs[i][j] = std::abs(fft_data[i].second[j]*fft_data[i+1].second[j]);
+	// 				// 		}
+	// 				// 	}
+	// 				// 	else { // Wraparound
+	// 				// 		for(int j=0; j<NUMSAMPLES_FFT; ++j) {
+	// 				// 			crossCorr_pairs[i][j] = std::abs(fft_data[i].second[j]*fft_data[0].second[j]);
+	// 				// 		}
+	// 				// 	}
+	// 				// }
+
+	// 				++counter;
+	// 				std::printf("FFT Counter %lu\n", counter);
+	// 				fft_counter = NUMSAMPLES_FFT/2;
+	// 			}
+	// 			output_time << "\n";		
+	// 		}
+	// 	}
+	// }
+	// Clean Up
+	//sp.close();
+	//fftw_destroy_plan(fft);
+	// fftw_destroy_plan(ifft);
+	// for(int i=0; i<num_streams; ++i) {
+	// 	fftw_free(fft_data[i].first);
+	// 	fftw_free(fft_data[i].second);
+	// }
+	return 0;
+}
+
+bool serial_init(serial::Serial & sp) {
 	// Serial Port Parameters
 	std::string port = "";
 	std::uint32_t baudrate = 921600;
@@ -47,165 +332,28 @@ int main() {
 		}
 	}
 
-	// Open the serial port
-	serial::Serial sp(
-		port,
-		baudrate,
-		timeout,
-		bytesize,
-		parity,
-		stopbits,
-		flowcontrol
-	);
+	// Set Serial Port Parameters
+	sp.setPort(port);
+	sp.setBaudrate(baudrate);
+	sp.setTimeout(timeout);
+	sp.setBytesize(bytesize);
+	sp.setParity(parity);
+	sp.setStopbits(stopbits);
+	sp.setFlowcontrol(flowcontrol);
+
+	sp.open();
 
 	// Check if the port was opened successfully
 	if(!sp.isOpen()) {
 		std::cout << "Error: serial port " + port + " did not open properly!" << std::endl;
-		return -1;
+		return false;
 	}
-	else std::cout << "Serial port " + port + " is open." << std::endl;
-	// ********** Serial Port Setup End ********** // 
-
-
-	// ********** Data Parsing and Processing Setup Begin ********** // 
-	// Variables and containers needed for parsing the serial data
-	std::size_t num_streams = 5; // Number of data streams = number of microphones
-
-	std::size_t data_length = num_streams*(2)+4; // 2 bytes per microphone + 4 bytes for time
-	std::uint8_t buffer[100];
-	std::uint32_t time_micros;
-	std::vector<std::uint16_t> microphone_data(num_streams);
-
-	std::uint16_t fs = 7800; // ADC Sampling Frequency
-	// Number of samples to use for FFT. FFT resolution is fs/N.
-	//std::size_t NUMSAMPLES_FFT = 8192;
-	// Counts up to NUMSAMPLES_FFT, then triggers FFT. Is reset to N/2 so FFTs overlap.
-	std::size_t fft_counter = 0;
-
-	std::vector<std::array<double, NUMSAMPLES_FFT>> crossCorr_pairs(num_streams+1); // Stores cross correlation results
-	// 
-	// for(int i=0; i=num_streams+1; ++i) {
-	// 	for(int j=0; j<NUMSAMPLES_FFT; ++j) {
-	// 		crossCorr_pairs[i].push_back(double);
-	// 	}
-	// }
-
-
-	// Create a vector of data streams. Each data stream is a deque containing the received
-	//     microphone readings.
-	std::vector<std::deque<std::uint16_t>> data_streams;
-	for(int i=0; i<num_streams; ++i) {
-		data_streams.push_back(std::deque<std::uint16_t>());
+	else {
+		std::cout << "Serial port " + port + " is open." << std::endl;
+		return true;
 	}
-
-	// Open up files for data logging
-	std::ofstream output_time("output_time.csv", std::ios::out | std::ios::trunc);
-	std::ofstream output_freq("output_freq.csv", std::ios::out | std::ios::trunc);
-	if(!(output_time.is_open()) || !(output_freq.is_open())) {
-		std::cout << "Error: Unable to open log files!" << std::endl;
-		return -1;
-	}
-	char buff[50];
-
-	// Set up mechanisms for FFT
-	std::vector<std::pair<double *, double *>> fft_data;
-
-	for(int i=0; i<num_streams; ++i) {
-		fft_data.push_back(std::make_pair(
-			(double*) fftw_malloc(sizeof(double) * NUMSAMPLES_FFT),
-			(double*) fftw_malloc(sizeof(double) * NUMSAMPLES_FFT)
-		));
-	}
-
-	// Create optimized plan for executing FFT
-	fftw_plan p = fftw_plan_r2r_1d(
-		NUMSAMPLES_FFT, 
-		fft_data[0].first, 
-		fft_data[0].second, 
-		FFTW_R2HC, 
-		FFTW_MEASURE
-	);
-
-	// ********** Data Parsing and Processing Setup End ********** // 
-
-	std::size_t counter = 0;
-	// ********** Main Program Loop ********** //
-	while(true) {
-		// Syncronize by reading CR (10) followed by LF (13)
-		sp.read(buffer,1);
-		if(buffer[0] == 10) {
-			sp.read(buffer,1);
-			if(buffer[0] == 13) { // Synchronized
-				sp.read(buffer, data_length);
-				++fft_counter;
-
-				// Reconstruct time data
-				time_micros = 0;
-				for(int i=0; i<4; ++i) {
-					time_micros += buffer[i] << 8*(3-i);
-				}
-				//std::printf("Time data: %u\n", time_micros);
-				for(int i=0; i<num_streams; ++i) {
-					microphone_data[i] = 0;
-					// Reconstruct microphone data
-					for(int j=0; j<2; ++j) {
-						microphone_data[i] += buffer[4+j+i*2] << 8*(1-j);
-					}
-					// Store data for use with FFT
-					data_streams[i].push_back(microphone_data[i]);
-					if(data_streams[i].size() > NUMSAMPLES_FFT) data_streams[i].pop_front();
-					
-					std::sprintf(buff, "%u,", microphone_data[i]);
-					output_time << buff;
-					//std::printf("Microphone data %d: %u\n", i, microphone_data[i]);
-				}
-				//std::printf("Counter: %lu\n", fft_counter);
-				if(fft_counter >= NUMSAMPLES_FFT) {
-					// Execute the Fourier transforms
-					for(int i=0; i<num_streams; ++i) {
-						for(int j=0; j<NUMSAMPLES_FFT; ++j) {
-							// Copy microphone data over. This will convert int to double.
-							fft_data[i].first[j] = (double) data_streams[i][j];
-						}
-						fftw_execute_r2r(p, fft_data[i].first, fft_data[i].second);
-					}
-					// Log the FFT outputs.
-					for(int i=0; i<(NUMSAMPLES_FFT+1)/2; ++i) {
-						for(int j=0; j<num_streams; ++j) {
-							std::sprintf(buff, "%f,", fft_data[j].second[i]);
-							output_freq << buff;			
-						}
-						output_freq << "\n";
-					}
-
-					// For each adjacent FFT pair, calculate the cross correlation.
-					for(int i=0; i<num_streams+1; ++i) {
-						if(i!=num_streams) {
-							for(int j=0; j<NUMSAMPLES_FFT; ++j) {
-								crossCorr_pairs[i][j] = std::abs(fft_data[i].second[j]*fft_data[i+1].second[j]);
-							}
-						}
-						else { // Wraparound
-							for(int j=0; j<NUMSAMPLES_FFT; ++j) {
-								crossCorr_pairs[i][j] = std::abs(fft_data[i].second[j]*fft_data[0].second[j]);
-							}
-						}
-					}
-
-					++counter;
-					std::printf("FFT Counter %lu\n", counter);
-					fft_counter = NUMSAMPLES_FFT/2;
-				}
-				output_time << "\n";		
-			}
-		}
-	}
-	// Clean Up
-	sp.close();
-	fftw_destroy_plan(p);
-	for(int i=0; i<num_streams; ++i) {
-		fftw_free(fft_data[i].first);
-		fftw_free(fft_data[i].second);
-	}
-	return 0;
 }
+
+// void parse_serial() {
+	
+// }

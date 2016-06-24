@@ -14,6 +14,7 @@ endif()
 
 include_directories(include)
 
+set(dsp_SRCS src/xcorr.cpp)
 set(serial_SRCS src/serial.cc include/serial/serial.h include/serial/v8stdint.h)
 if(UNIX)
     list(APPEND serial_SRCS src/impl/unix.cc)
@@ -28,8 +29,9 @@ add_library(serial ${serial_SRCS})
 if(UNIX AND NOT APPLE)
     target_link_libraries(serial rt)
 endif()
+add_library(dsp ${dsp_SRCS})
 
 ## Build your executable
 add_executable(Sound_Interface Sound_Interface.cpp)
 ## Link your executable against the library
-target_link_libraries(Sound_Interface serial fftw3 m)
+target_link_libraries(Sound_Interface serial dsp fftw3 m)
