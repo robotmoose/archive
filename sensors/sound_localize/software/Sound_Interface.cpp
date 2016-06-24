@@ -15,24 +15,19 @@
 #include <cstdio> // for std::printf & std::sprintf
 #include <utility> // for std::pair
 #include "xcorr.h"
+#include <fftw3.h>
 #include "serial/serial.h"
-
-//#include <complex>
-//#include <fftw3.h>
-
 #include <fstream>
-
 #include <chrono> // For timing
 
 #define NUMSAMPLES_FFT 2271 // Number of samples to use for FFT. FFT resolution is fs/N.
-#define FS 16000.0 // Sampling frequency is twice max frequency
+#define FS 11025.0 // Sampling frequency is twice max frequency
 
 // Function Prototypes
 bool serial_init(serial::Serial & sp);
 void make_xcor_plans(fftw_plan & pa, fftw_plan & pb, fftw_plan & px);
 
 int main() {
-
 	// Setup and open the serial port.
 	//serial::Serial sp;
 	//serial_init(sp);
@@ -63,75 +58,30 @@ int main() {
 	std::uint32_t numiters = 1000;
 	for(int i=0; i<numiters; ++i) {
 		auto begin = std::chrono::high_resolution_clock::now();
-		//xcorr(signala, signalb, result, NUMSAMPLES_FFT);
 		xcorr(signala, signalb, result, NUMSAMPLES_FFT, pa, pb, px);
 		auto end = std::chrono::high_resolution_clock::now();
 		avg += std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count();
-		//std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count() << "ns" << std::endl;
 	}
 	std::cout << avg/numiters << " ns (Average of " << numiters << " iterations)" << std::endl;
 
-
+	// Find the maximum correlation and the associated lag
+	std::pair<double, int> max_corr_pair = std::make_pair(result[0][0],-NUMSAMPLES_FFT+1); // store max corr at first, corresponding lag at second
 	for(int i=0; i<2*NUMSAMPLES_FFT-1; ++i) {
-		output << result[i][0] << "," << std::endl;
+		if(result[i][0] > max_corr_pair.first) {
+			max_corr_pair.first = result[i][0];
+			max_corr_pair.second = i-NUMSAMPLES_FFT+1; 
+		}
+		output << result[i][0] << "," << i-NUMSAMPLES_FFT+1 << std::endl;
 	}
-
+	std::cout << "Max correlation is " << max_corr_pair.first << " at a lag of " << max_corr_pair.second << std::endl;
+	if(max_corr_pair.second>0) std::cout << "Thus, signal a leads signal b by " << max_corr_pair.second/FS << " seconds\n";
+	else if(max_corr_pair.second<0) std::cout << "Thus, signal a lags signal b by " << max_corr_pair.second/FS << " seconds\n";
+	else std::cout << "Thus, signals a and b are fully synchronized\n";
 	// Clean up
 	fftw_destroy_plan(pa);
 	fftw_destroy_plan(pb);
 	fftw_destroy_plan(px);
 	fftw_cleanup();
-
-	// For Testing FFT
-	// double * y = new double[NUMSAMPLES_FFT];
-	// double * fft_result = new double[NUMSAMPLES_FFT];
-
-	// fftw_plan fft = fftw_plan_r2r_1d(
-	// 	NUMSAMPLES_FFT, 
-	// 	y, 
-	// 	fft_result, 
-	// 	FFTW_R2HC, 
-	// 	FFTW_MEASURE
-	// );
-	//double y[8192];
-	//double freq = 1500;
-	// for(int t=0; t<NUMSAMPLES_FFT/2; ++t) {
-	// 	y[t] = 1;
-	// }
-	// for(int t=NUMSAMPLES_FFT/2; t<NUMSAMPLES_FFT; ++t) {
-	// 	y[t] = 0;
-	// }
-	// int bit = 1;
-	// for(int t=0; t<NUMSAMPLES_FFT; ++t) {
-	// 	if(t%200 == 0) {
-	// 		bit ^= 1;
-	// 	}
-	// 	y[t] = bit;
-	// }
-
-	// char buff[50];
-	// std::ofstream output_time("output_time.csv", std::ios::out | std::ios::trunc);
-	// std::ofstream output_freq("output_freq.csv", std::ios::out | std::ios::trunc);
-
-	// for(int i=0; i<NUMSAMPLES_FFT; ++i) {
-	// 		std::sprintf(buff, "%f", y[i]);
-	// 		output_time << buff;			
-	// 	output_time << "\n";
-	// }
-
-
-	// fftw_execute_r2r(fft, y, fft_result);
-
-
-	// // Log the FFT outputs.
-	// for(int i=0; i<NUMSAMPLES_FFT; ++i) {
-	// 		std::sprintf(buff, "%f", fft_result[i]);
-	// 		output_freq << buff;			
-	// 	output_freq << "\n";
-	// }
-
-	// delete [] y;
-	// delete [] fft_result;
 
 	// ********** Data Parsing and Processing Setup Begin ********** // 
 	// // Variables and containers needed for parsing the serial data
@@ -173,33 +123,6 @@ int main() {
 	// }
 	// char buff[50];
 
-	// Set up mechanisms for FFT
-	// std::vector<std::pair<double *, double *>> fft_data;
-
-	// for(int i=0; i<num_streams; ++i) {
-	// 	fft_data.push_back(std::make_pair(
-	// 		(double*) fftw_malloc(sizeof(double) * NUMSAMPLES_FFT),
-	// 		(double*) fftw_malloc(sizeof(double) * NUMSAMPLES_FFT)
-	// 	));
-	// }
-
-	// // Create optimized plan for executing FFT
-	// fftw_plan fft = fftw_plan_r2r_1d(
-	// 	NUMSAMPLES_FFT, 
-	// 	fft_data[0].first, 
-	// 	fft_data[0].second, 
-	// 	FFTW_R2HC, 
-	// 	FFTW_MEASURE
-	// );
-
-	// // Create optimized plan for executing IFFT
-	// fftw_plan ifft = fftw_plan_r2r_1d(
-	// 	NUMSAMPLES_FFT, 
-	// 	fft_data[0].first, 
-	// 	fft_data[0].second, 
-	// 	FFTW_HC2R, 
-	// 	FFTW_MEASURE
-	// );
 
 	// ********** Data Parsing and Processing Setup End ********** // 
 

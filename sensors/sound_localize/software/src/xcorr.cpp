@@ -41,6 +41,4 @@ void xcorr(fftw_complex * signala, fftw_complex * signalb, fftw_complex * result
     fftw_free(out);
     fftw_free(outa);
     fftw_free(outb);
-
-    return;
 }
