@@ -30,11 +30,15 @@ function gui_t(div)
 		function()
 		{
 			_this.name.disabled=false;
+			_this.auth_input.enable();
 			_this.serial_selector.disconnect();
+			_this.sound_player.disconnect();
 		},
 		function()
 		{
 			_this.name.disabled=true;
+			_this.auth_input.disable();
+			_this.sound_player.connect();
 		}
 	);
 
@@ -77,8 +81,15 @@ function gui_t(div)
 	this.connection.on_name_set=function(robot)
 	{
 		_this.name.load(robot);
+		_this.sound_player.load(robot);
 		_this.serial_selector.load(robot);
 	};
+
+	//FIXME: NEED POPUP
+	this.connection.on_auth_error=function(err)
+	{
+		console.log("AUTH ERROR: "+err);
+	}
 	this.connection.load();
 
 	this.status_viewer=new status_viewer_t(this.main_div);

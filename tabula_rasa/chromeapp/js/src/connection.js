@@ -5,7 +5,7 @@
  Mike Moss & Orion Lawlor, 2015-12, Public Domain
 */
 
-function connection_t(on_message,on_disconnect,on_connect,on_name_set)
+function connection_t(on_message,on_disconnect,on_connect,on_name_set,on_auth_error)
 {
 	var _this=this;
 	_this.config="";
@@ -13,6 +13,7 @@ function connection_t(on_message,on_disconnect,on_connect,on_name_set)
 	_this.on_disconnect=on_disconnect;
 	_this.on_connect=on_connect;
 	_this.on_name_set=on_name_set;
+	_this.on_auth_error=on_auth_error;
 	_this.connection_invalid="yes, totally invalid";
 	_this.show_debug_bytes=false; // low level serial comm debugging
 	_this.max_command=15; // A-packet formatting
@@ -51,7 +52,7 @@ connection_t.prototype.reset=function() {
 
 	// Cancel all outstanding getnext calls
 	if ( _this.getnexts) {
-		console.log("Cleaning " + _this.getnexts.length + " getnext sockets.")
+		//console.log("Cleaning " + _this.getnexts.length + " getnext sockets.")
 		this.getnexts.forEach(function(conn) {
 			conn.abort();
 		});
@@ -278,13 +279,17 @@ connection_t.prototype.arduino_send_options=function()
 			_this.status_message(" Sent option list to superstar");
 			_this.arduino_setup_devices();
 		},
-    function(err) {
-      if (err.includes("(status 401)")) {
-        _this.status_message("Authentication error connecting to Superstar!\nMake sure your password is correct.");
-      } else {
-        _this.status_message("Error connecting to Superstar: " + err);
-      }
-    }
+	function(err) {
+	  if (err.includes("(status 401)")) {
+		var err="Authentication error connecting to Superstar!\nMake sure your password is correct.";
+		_this.status_message(err);
+		_this.gui_disconnect();
+		if(_this.on_auth_error)
+			_this.on_auth_error(err);
+	  } else {
+		_this.status_message("Error connecting to Superstar: " + err);
+	  }
+	}
 	);
 }
 
