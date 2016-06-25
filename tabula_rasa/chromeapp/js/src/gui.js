@@ -85,10 +85,9 @@ function gui_t(div)
 		_this.serial_selector.load(robot);
 	};
 
-	//FIXME: NEED POPUP
 	this.connection.on_auth_error=function(err)
 	{
-		console.log("AUTH ERROR: "+err);
+		chrome.runtime.sendMessage({message:err});
 	}
 	this.connection.load();
 

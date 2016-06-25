@@ -1,8 +1,8 @@
 {
-	"name":"RobotMoose test",
-	"short_name":"RobotMoose test",
-	"description":"Robotics backend software (test from git).",
-	"version":"2016.6.15.0",
+	"name":"RobotMoose",
+	"short_name":"RobotMoose",
+	"description":"Robotics backend software.",
+	"version":"2016.6.16.0",
 	"manifest_version":2,
 	"permissions":
 	[
@@ -16,11 +16,12 @@
 		"https://androidantelope.com/",
 		"http://cyborgcaribou.com/",
 		"https://cyborgcaribou.com/",
+		"alwaysOnTopWindows",
+		"audioCapture",
+		"fullscreen",
 		"serial",
 		"storage",
-		"audioCapture",
 		"videoCapture",
-		"fullscreen",
 		"webview"
 	],
 	"app":
@@ -36,11 +37,13 @@
 				"js/src/gui.js",
 				"js/src/name.js",
 				"js/src/packetize.js",
+				"js/src/popup.js",
 				"js/src/prettify.js",
 				"js/src/serial_selector.js",
 				"js/src/sim_serial.js",
 				"js/src/status_viewer.js",
 				"js/src/superstar.js",
+				"js/src/uri.js",
 				"js/src/vector.js",
 				"js/src/window.js",
                 "js/include/jquery.min.js",
