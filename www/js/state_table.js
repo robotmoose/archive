@@ -83,6 +83,8 @@ function state_table_t(doorway)
 		_this.run_button_pressed_m();
 	};
 
+	this.load_file_modal=new modal_loadstate_t(this.doorway.parent_div, this);
+
 	this.load_file_button=document.createElement("input");
 	this.el.appendChild(this.load_file_button);
 	this.load_file_button.type="button";
