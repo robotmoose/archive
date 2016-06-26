@@ -65,7 +65,7 @@ chart_interface_t.prototype.refresh=function(json) {
 							sensor_list.push(subprop + "_" + i);
 							if(this.doesExist(this.charts.data[subprop + "_" + i])){
 								this.charts.data[subprop + "_" + i].append(new Date().getTime(), json[prop][subprop][i]);
-								this.charts.header[subprop + "_" + i].innerHTML = subprop + " (" + json[prop][subprop][i] + ")";
+								this.charts.header[subprop + "_" + i].innerHTML = subprop + "_" + i +" (" + json[prop][subprop][i] + ")";
 							}
 						}
 					}
@@ -75,8 +75,10 @@ chart_interface_t.prototype.refresh=function(json) {
 			case "heartbeats":
 			case "latency":
 				sensor_list.push(prop);
-				if(this.doesExist(this.charts.data[prop]))
+				if(this.doesExist(this.charts.data[prop])) {
 					this.charts.data[prop].append(new Date().getTime(), json[prop]);
+					this.charts.header[prop].innerHTML = prop + " (" + json[prop] + ")";
+				}
 				break;
 
 			// Sensor where there can be multiple, and they are stored in an array.
@@ -87,6 +89,7 @@ chart_interface_t.prototype.refresh=function(json) {
 					sensor_list.push(prop + "_" + i);
 					if(this.doesExist(this.charts.data[prop + "_" + i])){
 						this.charts.data[prop + "_" + i].append(new Date().getTime(), json[prop][i]);
+						this.charts.header[prop + "_" + i].innerHTML = prop + "_" + i + " (" + json[prop][i] +")";
 					}
 				}
 				break;
