@@ -36,9 +36,20 @@ function modal_loadstate_t(div, state_table)
 		var file = myself.browse_input.files[0];
 		var reader = new FileReader();
 		reader.readAsText(file);
-		reader.onloadend = function() {
-			state_table.create_entry_m(file.name, "", reader.result);
-			myself.modal.hide();
+		reader.onloadend = function()
+		{
+			try
+			{
+				//FIXME: HOW SHOULD THIS HANDLE OVERWRITING? SHOULD IT AT ALL?
+				var json=JSON.parse(reader.result);
+				state_table.build(json);
+				myself.modal.hide();
+			}
+			catch(error)
+			{
+				//FIXME: MAKE THIS SHOW AN ERROR
+				console.log("LOAD ERROR! - "+error);
+			}
 		}
 	};
 

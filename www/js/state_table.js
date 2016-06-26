@@ -92,9 +92,21 @@ function state_table_t(doorway)
 	this.load_file_button.style.float="right";
 	this.load_file_button.style.marginLeft=10;
 	this.load_file_button.disabled=false;
-	this.load_file_button.value="Load State from File";
+	this.load_file_button.value="Load from File";
 	this.load_file_button.title="Click here to load a state from a local file.";
 	this.load_file_button.onclick=function(event){_this.load_file_button_pressed_m();};
+
+	this.save_file_button=document.createElement("input");
+	this.el.appendChild(this.save_file_button);
+	this.save_file_button.type="button";
+	this.save_file_button.className="btn btn-primary";
+	this.save_file_button.style.float="right";
+	this.save_file_button.style.marginLeft=10;
+	this.save_file_button.disabled=false;
+	this.save_file_button.value="Save to File";
+	this.save_file_button.title="Click here to save a state to a local file.";
+	this.save_file_button.onclick=function(event){_this.save_file_button_pressed_m();};
+
 
 	this.add_button=document.createElement("input");
 	this.el.appendChild(this.add_button);
@@ -224,6 +236,8 @@ state_table_t.prototype.experiment_exists=function(name,onfinish)
 	}
 }
 
+//Takes a json of states and builds the states list:
+//	json should look like: [{name:"state_name",code:"//The Code",time:123},...]
 state_table_t.prototype.build=function(json)
 {
 	this.drag_list.clear(false);
@@ -275,6 +289,8 @@ state_table_t.prototype.set_active=function(state)
 	}
 }
 
+//Returns a json array of the current state table:
+//	json looks like: [{name:"state_name",code:"//The Code",time:123},...]
 state_table_t.prototype.get_states=function()
 {
 	var data=[];
@@ -461,30 +477,6 @@ state_table_t.prototype.create_entry_m=function(name,time,code)
 	entry.code_editor_event=function(event){entry.code_editor.refresh();};
 	window.addEventListener("click",entry.code_editor_event);
 
-	entry.download_button.className="glyphicon glyphicon-download-alt";
-	entry.download_button.style.display="inline-block";
-	entry.download_button.style.width="100%";
-	entry.download_button.style.marginTop="16px";
-	entry.download_button.style.textAlign="center";
-	entry.download_button.style.cursor="pointer";
-	entry.download_button.style.color="#ccc";
-	entry.download_button.onmouseover=function(event) {
-		  event.target.style.color="#aaa";
-	};
-	entry.download_button.onmouseout=function(event) {
-		    event.target.style.color="#ccc";
-	};
-	entry.download_button.onclick=function(event) {
-		var code = entry.code_editor.getValue();
-		var fake_link = document.createElement("a");
-		fake_link.download = name + '.js';
-		fake_link.href = URL.createObjectURL(new Blob([code]));
-		document.body.appendChild(fake_link);
-		fake_link.click();
-		document.body.removeChild(fake_link);
-	}
-	entry.table.left.appendChild(entry.download_button);
-
 	this.entries.push(entry);
 }
 
@@ -596,13 +588,15 @@ state_table_t.prototype.create_new_experiment=function(value)
 state_table_t.prototype.load_file_button_pressed_m=function()
 {
 	this.onstop_m();
-
-	var state_name="";
-
-	if(this.get_states().length==0)
-		state_name="start";
-
 	this.load_file_modal.modal.show();
+}
+
+state_table_t.prototype.save_file_button_pressed_m=function()
+{
+	this.onstop_m();
+	var filename=this.active_experiment+".json";
+	var states=this.get_states();
+	console.log("save "+filename+" with "+JSON.stringify(states));
 }
 
 
