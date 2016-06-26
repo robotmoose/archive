@@ -6,8 +6,10 @@ function chart_interface_t(div) {
 	// Stores chart data and related elements. Indexed by sensor name.
 	this.charts = {
 		canvas: {},
-		smoothie: {},
-		data: {},
+		//smoothie: {},
+		chart: {},
+		//data: {},
+		data_points: {},
 		header: {}
 	};
 
@@ -63,9 +65,15 @@ chart_interface_t.prototype.refresh=function(json) {
 					if(subprop == "servo") {
 						for(i=0; i < json[prop][subprop].length; ++i) {
 							sensor_list.push(subprop + "_" + i);
-							if(this.doesExist(this.charts.data[subprop + "_" + i])){
-								this.charts.data[subprop + "_" + i].append(new Date().getTime(), json[prop][subprop][i]);
-								this.charts.header[subprop + "_" + i].innerHTML = subprop + "_" + i +" (" + json[prop][subprop][i] + ")";
+							if(this.doesExist(this.charts.data_points[subprop + "_" + i])) {
+								this.charts.data_points[subprop + "_" + i].datasets[0].data.push(json[prop][subprop][i]);
+								this.charts.data_points[subprop + "_" + i].labels.push(0);
+								if(this.charts.data_points[subprop + "_" + i].datasets[0].data.length > 30) {
+									this.charts.data_points[subprop + "_" + i].datasets[0].data.shift();
+									this.charts.data_points[subprop + "_" + i].labels.shift();
+								}
+								this.charts.chart[subprop + "_" + i].update();
+								this.charts.header[subprop + "_" + i].innerHTML = subprop + "_" + i + " (" + json[prop][subprop][i] + ")";
 							}
 						}
 					}
@@ -75,8 +83,14 @@ chart_interface_t.prototype.refresh=function(json) {
 			case "heartbeats":
 			case "latency":
 				sensor_list.push(prop);
-				if(this.doesExist(this.charts.data[prop])) {
-					this.charts.data[prop].append(new Date().getTime(), json[prop]);
+				if(this.doesExist(this.charts.data_points[prop])) {
+					this.charts.data_points[prop].datasets[0].data.push(json[prop]);
+					this.charts.data_points[prop].labels.push(0);
+					if(this.charts.data_points[prop].datasets[0].data.length > 30) {
+						this.charts.data_points[prop].datasets[0].data.shift();
+						this.charts.data_points[prop].labels.shift();
+					}
+					this.charts.chart[prop].update();
 					this.charts.header[prop].innerHTML = prop + " (" + json[prop] + ")";
 				}
 				break;
@@ -87,9 +101,15 @@ chart_interface_t.prototype.refresh=function(json) {
 			case "ultrasonic":
 				for(i=0; i < json[prop].length; ++i) {
 					sensor_list.push(prop + "_" + i);
-					if(this.doesExist(this.charts.data[prop + "_" + i])){
-						this.charts.data[prop + "_" + i].append(new Date().getTime(), json[prop][i]);
-						this.charts.header[prop + "_" + i].innerHTML = prop + "_" + i + " (" + json[prop][i] +")";
+					if(this.doesExist(this.charts.data_points[prop + "_" + i])) {
+						this.charts.data_points[prop + "_" + i].datasets[0].data.push(json[prop][i]);
+						this.charts.data_points[prop + "_" + i].labels.push(0);
+						if(this.charts.data_points[prop + "_" + i].datasets[0].data.length > 30) {
+							this.charts.data_points[prop + "_" + i].datasets[0].data.shift();
+							this.charts.data_points[prop + "_" + i].labels.shift();
+						}
+						this.charts.chart[prop + "_" + i].update();
+						this.charts.header[prop + "_" + i].innerHTML = prop + "_" + i + " (" + json[prop][i] + ")";
 					}
 				}
 				break;
@@ -114,49 +134,68 @@ chart_interface_t.prototype.doesExist=function(variable) {
 
 chart_interface_t.prototype.add_chart=function() {
 	var _this = this;
-	if(!_this.doesExist(_this.charts.data[_this.chart_drop.value])) {
+	if(!_this.doesExist(_this.charts.data_points[_this.chart_drop.value])) {
 	 	_this.charts.canvas[_this.chart_drop.value] = document.createElement("canvas");
 	 	_this.charts.header[_this.chart_drop.value] = document.createElement("h4");
 	 	_this.charts.header[_this.chart_drop.value].innerHTML = _this.chart_drop.value;
-	 	_this.charts.canvas[_this.chart_drop.value].width = 300;
+	 	_this.charts.canvas[_this.chart_drop.value].width = 500;
 	 	_this.charts.canvas[_this.chart_drop.value].height = 100;
+	 	//_this.charts.canvas[_this.chart_drop.value].style="width:70%; height:150";
 
 		_this.chart_div.appendChild(_this.charts.header[_this.chart_drop.value]);
 		_this.chart_div.appendChild(_this.charts.canvas[_this.chart_drop.value]);
 
-		// Create the actual chart
-		_this.charts.smoothie[_this.chart_drop.value] = new SmoothieChart();
-		_this.charts.smoothie[_this.chart_drop.value].streamTo(_this.charts.canvas[_this.chart_drop.value], 100);
-
-
 		// Initialize the data
-		if(_this.chart_drop.value == "light") {
-			// _this.charts.data[_this.chart_drop.value] = [];
-			// for(i=0; i<6; ++i) {
-			// 	_this.charts.data[_this.chart_drop.value].push(new TimeSeries());
-			// 	_this.charts.smoothie[_this.chart_drop.value].addTimeSeries(
-			// 		_this.charts.data[_this.chart_drop.value], 
-			// 		{ strokeStyle:'rgb(0, 255, 0)', lineWidth:3}
-			// 	);
-			// }
-		}
-		else { // Generic 1-series charts
-			_this.charts.data[_this.chart_drop.value] = new TimeSeries();
-			_this.charts.smoothie[_this.chart_drop.value].addTimeSeries(
-				_this.charts.data[_this.chart_drop.value], 
-				{ strokeStyle:'rgb(0, 255, 0)', lineWidth:3}
-			);
-		}
+		_this.charts.data_points[_this.chart_drop.value] = {
+			labels:[],
+			datasets: [{
+				data: [],
+				// Line Options
+				fill: false, // Don't fill area under line
+				pointRadius: 0, // Don't draw points
+				borderColor: "#0BB5FF"
+			}]
+		};
+
+		// Create the actual chart
+		_this.charts.chart[_this.chart_drop.value] = new Chart(_this.charts.canvas[_this.chart_drop.value].getContext('2d'), {
+			type: 'line',
+			data: _this.charts.data_points[_this.chart_drop.value],
+			options: {
+				responsive: true,
+				maintainAspectRatio: true,
+				animation: {
+					duration: 10
+				},
+				legend: {
+					display: false
+				},
+				scales: {
+					xAxes: [{
+						display: false
+					}],
+					yAxes: [{
+						gridLines: {
+							display: false
+						}
+					}]
+				}
+			}
+		});
 	}
 }
 
 chart_interface_t.prototype.remove_chart=function() {
 	var _this = this;
-	if(_this.doesExist(_this.charts.data[_this.chart_drop.value])) {
-		_this.charts.smoothie[_this.chart_drop.value].removeTimeSeries(_this.charts.data[_this.chart_drop.value]);
+	if(_this.doesExist(_this.charts.data_points[_this.chart_drop.value])) {
+		// Clean up
 		_this.chart_div.removeChild(_this.charts.canvas[_this.chart_drop.value]);
 		_this.chart_div.removeChild(_this.charts.header[_this.chart_drop.value]);
-		_this.charts.smoothie[_this.chart_drop.value] = null;
-		_this.charts.data[_this.chart_drop.value] = null;
+		_this.charts.canvas[_this.chart_drop.value] = null;
+		_this.charts.header[_this.chart_drop.value] = null;
+		_this.charts.data_points[_this.chart_drop.value] = null;
+		_this.charts.chart[_this.chart_drop.value].destroy();
+		_this.charts.chart[_this.chart_drop.value] = null;
+
 	}
 }
