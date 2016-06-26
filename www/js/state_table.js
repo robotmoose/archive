@@ -55,6 +55,7 @@ function state_table_t(doorway)
 
 	this.new_button=document.createElement("input");
 	this.el.appendChild(this.new_button);
+	this.new_button.type="button";
 	this.new_button.className="btn btn-primary";
 	this.new_button.style.width="64px";
 	this.new_button.style.marginLeft=10;
@@ -68,6 +69,7 @@ function state_table_t(doorway)
 
 	this.run_button=document.createElement("input");
 	this.el.appendChild(this.run_button);
+	this.run_button.type="button";
 	this.run_button.className="btn btn-primary";
 	this.run_button.style.width="64px";
 	this.run_button.style.marginLeft=10;
