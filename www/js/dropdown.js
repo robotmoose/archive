@@ -22,7 +22,7 @@ function dropdown_t(div,enable_callback,onchange)
 		_this.value=_this.selected_m();
 		_this.index=_this.selected_index_m();
 		if(_this.onchange)
-			_this.onchange();
+			_this.onchange(_this.value);
 	};
 	this.disabled=false;
 }
@@ -80,8 +80,13 @@ dropdown_t.prototype.build=function(list,on_loaded_value)
 		var found=false;
 		if(this.select.selectedIndex>=0&&this.select.options.length>this.select.selectedIndex)
 			old=this.select.options[this.select.selectedIndex].value;
+		var changed=false;
 		if(on_loaded_value)
+		{
+			if(old)
+				changed=true;
 			old=on_loaded_value;
+		}
 		this.select.options.length=0;
 		for(var ii=0;ii<list.length;++ii)
 		{
@@ -92,10 +97,18 @@ dropdown_t.prototype.build=function(list,on_loaded_value)
 				option.selected=found=true;
 		}
 		if(!found)
+		{
+			changed=false;
 			this.select.selectedIndex=0;
+			if(this.onchange)
+				this.onchange(null);
+		}
+		var change=(!this.value)||changed;
 		this.value=this.selected_m();
 		this.index=this.selected_index_m();
 		this.select.disabled=(this.disabled||this.enable_callback()||this.select.options.length<=0);
+		if(change&&this.onchange)
+			this.onchange(this.value);
 		return;
 	}
 
@@ -113,6 +126,10 @@ dropdown_t.prototype.set_background_color=function(color)
 {
 	this.select.style.backgroundColor=color;
 }
+
+
+
+
 
 
 

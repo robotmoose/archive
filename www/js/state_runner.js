@@ -102,7 +102,7 @@ state_runner_t.prototype.run=function(robot,state_table)
 
 	var myself=this;
 
-	state_table.upload(robot);
+	//state_table.upload(robot);
 
 	state_table.run();
 
@@ -391,7 +391,7 @@ state_runner_t.prototype.make_user_VM=function(code,states)
 			if (s_arr[0] === "store") v_str = s_arr[1];
 			{
 				VM.store[v_str] = ret.dom.checked;
-				
+
 			}
 			//else v_str = s_arr[0];
 		}

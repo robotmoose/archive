@@ -7,6 +7,7 @@ function drag_list_t(div)
 	this.element=document.createElement("div");
 	this.ul=document.createElement("ul");
 	this.entries=[];
+	this.dragging_entry=null;
 
 	this.div.appendChild(this.element);
 
@@ -35,12 +36,12 @@ drag_list_t.prototype.get_entries=function()
 	return this.entries;
 }
 
-drag_list_t.prototype.clear=function()
+drag_list_t.prototype.clear=function(callback_enabled)
 {
 	var entries=this.get_entries();
 
 	for(var key in entries)
-		this.remove_entry(entries[key]);
+		this.remove_entry(entries[key],callback_enabled);
 
 	this.entries=[];
 }
@@ -75,9 +76,17 @@ drag_list_t.prototype.create_entry=function()
 	entry.ondrag=null;
 	entry.move_handle.onmousedown=function()
 	{
-		if(entry.ondrag)
-			entry.ondrag();
+		myself.dragging_entry=entry;
 	};
+	entry.drag_listener=document.addEventListener("mouseup",function()
+	{
+		if(myself.dragging_entry)
+		{
+			if(myself.dragging_entry.ondrag)
+				myself.dragging_entry.ondrag();
+			myself.dragging_entry=null;
+		}
+	});
 	entry.table.left.appendChild(entry.move_handle);
 
 	entry.table.center.appendChild(entry.content);
@@ -98,7 +107,7 @@ drag_list_t.prototype.create_entry=function()
 	return entry;
 }
 
-drag_list_t.prototype.remove_entry=function(entry)
+drag_list_t.prototype.remove_entry=function(entry,callback_enabled)
 {
 	if(entry)
 	{
@@ -109,8 +118,9 @@ drag_list_t.prototype.remove_entry=function(entry)
 			if(entries[key]&&entries[key]===entry)
 			{
 				this.ul.removeChild(entries[key].li);
+				document.removeEventListener("mouseup",entry.drag_listener);
 
-				if(entries[key].onremove)
+				if(callback_enabled&&entries[key].onremove)
 					entries[key].onremove(entry);
 
 				entries[key]=undefined;
