@@ -594,9 +594,12 @@ state_table_t.prototype.load_file_button_pressed_m=function()
 state_table_t.prototype.save_file_button_pressed_m=function()
 {
 	this.onstop_m();
-	var filename=this.active_experiment+".json";
-	var states=this.get_states();
-	console.log("save "+filename+" with "+JSON.stringify(states));
+	var fake_link=document.createElement("a");
+	fake_link.download=this.active_experiment+".json";
+	fake_link.href=URL.createObjectURL(new Blob([JSON.stringify(this.get_states())]));
+	document.body.appendChild(fake_link);
+	fake_link.click();
+	document.body.removeChild(fake_link);
 }
 
 
