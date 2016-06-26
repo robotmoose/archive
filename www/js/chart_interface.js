@@ -55,7 +55,25 @@ chart_interface_t.prototype.refresh=function(json) {
 
 		switch(prop) {
 			// Sensors where there can be only one.
+			case "power":
+				for(var subprop in json[prop]) {
+					if(!json[prop].hasOwnProperty(subprop)) {
+						continue;
+					}
+					if(subprop == "servo") {
+						for(i=0; i < json[prop][subprop].length; ++i) {
+							sensor_list.push(subprop + "_" + i);
+							if(this.doesExist(this.charts.data[subprop + "_" + i])){
+								this.charts.data[subprop + "_" + i].append(new Date().getTime(), json[prop][subprop][i]);
+								this.charts.header[subprop + "_" + i].innerHTML = subprop + " (" + json[prop][subprop][i] + ")";
+							}
+						}
+					}
+				}
+				break;
+			case "bumper":
 			case "heartbeats":
+			case "latency":
 				sensor_list.push(prop);
 				if(this.doesExist(this.charts.data[prop]))
 					this.charts.data[prop].append(new Date().getTime(), json[prop]);
@@ -63,8 +81,8 @@ chart_interface_t.prototype.refresh=function(json) {
 
 			// Sensor where there can be multiple, and they are stored in an array.
 			case "analog":
-			case "ultrasonic":
 			case "encoder_raw":
+			case "ultrasonic":
 				for(i=0; i < json[prop].length; ++i) {
 					sensor_list.push(prop + "_" + i);
 					if(this.doesExist(this.charts.data[prop + "_" + i])){
@@ -72,6 +90,12 @@ chart_interface_t.prototype.refresh=function(json) {
 					}
 				}
 				break;
+			// Create 2 Sensors
+			// case "light":
+			// 	sensor_list.push(prop);
+			// 	if(this.doesExist(this.charts.data[prop])){
+			// 		this.charts.data[prop + "_" + i].append(new Date().getTime(), json[prop][i]);
+			// 	}
 			default:
 				break;
 		}
@@ -103,11 +127,23 @@ chart_interface_t.prototype.add_chart=function() {
 
 
 		// Initialize the data
-		_this.charts.data[_this.chart_drop.value] = new TimeSeries();
-		_this.charts.smoothie[_this.chart_drop.value].addTimeSeries(
-			_this.charts.data[_this.chart_drop.value], 
-			{ strokeStyle:'rgb(0, 255, 0)', lineWidth:3}
-		);
+		if(_this.chart_drop.value == "light") {
+			// _this.charts.data[_this.chart_drop.value] = [];
+			// for(i=0; i<6; ++i) {
+			// 	_this.charts.data[_this.chart_drop.value].push(new TimeSeries());
+			// 	_this.charts.smoothie[_this.chart_drop.value].addTimeSeries(
+			// 		_this.charts.data[_this.chart_drop.value], 
+			// 		{ strokeStyle:'rgb(0, 255, 0)', lineWidth:3}
+			// 	);
+			// }
+		}
+		else { // Generic 1-series charts
+			_this.charts.data[_this.chart_drop.value] = new TimeSeries();
+			_this.charts.smoothie[_this.chart_drop.value].addTimeSeries(
+				_this.charts.data[_this.chart_drop.value], 
+				{ strokeStyle:'rgb(0, 255, 0)', lineWidth:3}
+			);
+		}
 	}
 }
 
