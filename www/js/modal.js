@@ -47,6 +47,8 @@ function modal_t(div)
 	this.close_button.style.float="right";
 	this.close_button.onclick=function(event){myself.hide();};
 	this.title_area.appendChild(this.close_button);
+	$(this.modal).find(".modal-dialog").modal({keyboard:false});
+	$(this.modal).find(".modal-dialog").modal('hide');
 }
 
 modal_t.prototype.set_title=function(title)
@@ -74,4 +76,5 @@ modal_t.prototype.hide=function()
 {
 	this.modal.className="modal hide";
 	$(this.modal).find(".modal-dialog").modal('hide');
+
 }
