@@ -37,7 +37,7 @@ function modal_loadstate_t(div, state_table)
 		var reader = new FileReader();
 		reader.readAsText(file);
 		reader.onloadend = function() {
-			state_table.create_entry(file.name, "", reader.result);
+			state_table.create_entry_m(file.name, "", reader.result);
 			myself.modal.hide();
 		}
 	};
