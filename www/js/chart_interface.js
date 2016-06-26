@@ -8,15 +8,13 @@ function chart_interface_t(div) {
 		canvas: {},
 		smoothie: {},
 		data: {},
-		chart_head_div: {},
-		chart_body_div: {}
+		header: {}
 	};
 
 	// ***** Create UI ***** //
 	this.div=div;
 	this.controls_div=document.createElement("div");
 	this.chart_div=document.createElement("div");
-	this.chart_div.className="panel panel-default";
 
 	this.chart_drop=new dropdown_t(this.controls_div);
 
@@ -90,19 +88,14 @@ chart_interface_t.prototype.doesExist=function(variable) {
 chart_interface_t.prototype.add_chart=function() {
 	var _this = this;
 	if(!_this.doesExist(_this.charts.data[_this.chart_drop.value])) {
-		// Create the canvas and add it to the chart div
-		_this.charts.chart_head_div[_this.chart_drop.value] = document.createElement("div");
-		_this.charts.chart_head_div[_this.chart_drop.value].className = "panel-heading";
-		_this.charts.chart_head_div[_this.chart_drop.value].innerHTML = _this.chart_drop.value;
-		_this.charts.chart_body_div[_this.chart_drop.value] = document.createElement("div");
-		_this.charts.chart_body_div[_this.chart_drop.value].className = "panel-body";
 	 	_this.charts.canvas[_this.chart_drop.value] = document.createElement("canvas");
+	 	_this.charts.header[_this.chart_drop.value] = document.createElement("h4");
+	 	_this.charts.header[_this.chart_drop.value].innerHTML = _this.chart_drop.value;
 	 	_this.charts.canvas[_this.chart_drop.value].width = 300;
 	 	_this.charts.canvas[_this.chart_drop.value].height = 100;
 
-	 	_this.chart_div.appendChild(_this.charts.chart_head_div[_this.chart_drop.value]);
-	 	_this.chart_div.appendChild(_this.charts.chart_body_div[_this.chart_drop.value]);
-		_this.charts.chart_body_div[_this.chart_drop.value].appendChild(_this.charts.canvas[_this.chart_drop.value])
+		_this.chart_div.appendChild(_this.charts.header[_this.chart_drop.value]);
+		_this.chart_div.appendChild(_this.charts.canvas[_this.chart_drop.value]);
 
 		// Create the actual chart
 		_this.charts.smoothie[_this.chart_drop.value] = new SmoothieChart();
@@ -123,6 +116,7 @@ chart_interface_t.prototype.remove_chart=function() {
 	if(_this.doesExist(_this.charts.data[_this.chart_drop.value])) {
 		_this.charts.smoothie[_this.chart_drop.value].removeTimeSeries(_this.charts.data[_this.chart_drop.value]);
 		_this.chart_div.removeChild(_this.charts.canvas[_this.chart_drop.value]);
+		_this.chart_div.removeChild(_this.charts.header[_this.chart_drop.value]);
 		_this.charts.smoothie[_this.chart_drop.value] = null;
 		_this.charts.data[_this.chart_drop.value] = null;
 	}
