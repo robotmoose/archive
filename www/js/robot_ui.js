@@ -153,6 +153,7 @@ robot_ui_t.prototype.download_gui=function()
 			config:myself.create_doorway("Configure","Set up robot hardware",help_text_config),
 			pilot:myself.create_doorway("Drive","Manually drive the robot",null),
 			sensors:myself.create_doorway("Sensors","Examine sensor data from robot",null),
+			charts:myself.create_doorway("Charts", "Chart sensor data received from robot",null),
 			states:myself.create_doorway("Code","Automatically drive the robot",help_text_states),
 			map:myself.create_doorway("Map","See where the robot thinks it is",null),
 			video:myself.create_doorway("Video","Show the robot's video camera",null),
@@ -164,6 +165,7 @@ robot_ui_t.prototype.download_gui=function()
 		clear_out(myself.doorways.config.content);
 		clear_out(myself.doorways.pilot.content);
 		clear_out(myself.doorways.sensors.content);
+		clear_out(myself.doorways.charts.content);
 		clear_out(myself.doorways.states.content);
 		clear_out(myself.doorways.map.content);
 		clear_out(myself.doorways.video.content);
@@ -203,6 +205,9 @@ robot_ui_t.prototype.run_interval=function() {
 				if (!myself.doorways.map.minimized)
 					myself.widgets.map.refresh(sensors);
 
+				if(!myself.doorways.charts.minimized)
+					myself.widgets.charts.refresh(sensors);
+
 				myself.state_runner.VM_sensors=sensors;
 			});
 	}
@@ -236,6 +241,7 @@ robot_ui_t.prototype.create_widgets=function()
 		config:new config_editor_t(this.doorways.config.content),
 		states:new state_table_t(this.doorways.states),
 		pilot:new pilot_interface_t(this.doorways.pilot.content),
+		charts:new chart_interface_t(this.doorways.charts.content),
 		sensors:new tree_viewer_t(this.doorways.sensors.content,{}),
 		map:new robot_map_t(this.doorways.map.content,{}),
 		video:new video_widget_t(this.doorways.video,myself.pilot_heartbeat),
