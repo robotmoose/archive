@@ -83,6 +83,17 @@ function state_table_t(doorway)
 		_this.run_button_pressed_m();
 	};
 
+	this.load_file_button=document.createElement("input");
+	this.el.appendChild(this.load_file_button);
+	this.load_file_button.type="button";
+	this.load_file_button.className="btn btn-primary";
+	this.load_file_button.style.float="right";
+	this.load_file_button.style.marginLeft=10;
+	this.load_file_button.disabled=false;
+	this.load_file_button.value="Load State from File";
+	this.load_file_button.title="Click here to load a state from a local file.";
+	this.load_file_button.onclick=function(event){_this.load_file_button_pressed_m();};
+
 	this.add_button=document.createElement("input");
 	this.el.appendChild(this.add_button);
 	this.add_button.type="button";
@@ -580,7 +591,17 @@ state_table_t.prototype.create_new_experiment=function(value)
 		);
 }
 
+state_table_t.prototype.load_file_button_pressed_m=function()
+{
+	this.onstop_m();
 
+	var state_name="";
+
+	if(this.get_states().length==0)
+		state_name="start";
+
+	this.load_file_modal.modal.show();
+}
 
 
 
