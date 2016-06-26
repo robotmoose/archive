@@ -43,6 +43,9 @@ function modal_loadstate_t(div, state_table)
 				//FIXME: HOW SHOULD THIS HANDLE OVERWRITING? SHOULD IT AT ALL?
 				var json=JSON.parse(reader.result);
 				state_table.build(json);
+				state_table.upload_active_experiment(state_table.active_experiment);
+				state_table.upload(state_table.robot);
+				state_table.update_states_m();
 				myself.modal.hide();
 			}
 			catch(error)
