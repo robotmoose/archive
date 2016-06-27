@@ -1,4 +1,7 @@
-function tree_viewer_t(div,json)
+//Variable special_types is an object that contains special printing options.
+//  For example, to print a key named "bumpers" as binary, you would pass:
+//    [{key:"bumper",type:"binary"}]
+function tree_viewer_t(div,json,special_types)
 {
 	this.div=div;
 
@@ -6,6 +9,7 @@ function tree_viewer_t(div,json)
 		return null;
 
 	this.json=json;
+	this.special_types=special_types;
 
 	this.div.style.width=480;
 	this.indent=50; // pixels of indenting per level
@@ -112,7 +116,28 @@ tree_viewer_t.prototype.build=function(json,parent)
 			li.style.marginLeft=myself.spacing;
 
 			var text=document.createElement("span");
-			text.innerHTML=key+" = "+json[key];
+			text.innerHTML=key+" = ";
+
+			var printed=false;
+			for(var ii in this.special_types)
+			{
+				if(this.special_types[ii].key==key)
+				{
+					printed=true;
+					if(this.special_types[ii].type=="binary")
+					{
+						var bin_str=json[key].toString(2);
+						while(bin_str.length<8)
+							bin_str="0"+bin_str;
+						text.innerHTML+=bin_str;
+					}
+					break;
+				}
+			}
+
+			if(!printed)
+				text.innerHTML+=json[key];
+
 			text.style.paddingLeft=10;
 
 			li.tree_parent=ul;

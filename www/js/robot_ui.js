@@ -242,7 +242,10 @@ robot_ui_t.prototype.create_widgets=function()
 		states:new state_table_t(this.doorways.states),
 		pilot:new pilot_interface_t(this.doorways.pilot.content),
 		charts:new chart_interface_t(this.doorways.charts.content),
-		sensors:new tree_viewer_t(this.doorways.sensors.content,{}),
+		sensors:new tree_viewer_t(this.doorways.sensors.content,{},
+		[
+			{key:"bumper",type:"binary"}
+		]),
 		map:new robot_map_t(this.doorways.map.content,{}),
 		video:new video_widget_t(this.doorways.video,myself.pilot_heartbeat),
 		UI:new UI_builder_t(this.doorways.UI.content),
