@@ -126,6 +126,22 @@ robot_ui_t.prototype.download_gui=function()
 	//+ "sensors.location.angle - <i> Direction robot is facing </i><br>"
 	//+ "sensors.floor[2] - <i> Floor sensor 2 </i><br>";
 
+	var help_text_sensors =
+	"<h3>How to Interpret Sensor Data</h3>"
+	+ "<h4>Create 2 Sensors:</h4>"
+	+ "<ul>"
+	+ "<li>Mode:</li>"
+	+ "<li>Bumper: Bumper data is represented by a 4-bit field. The two least significant "
+	+ "bits are the front bumper data, and the two most significant bits are the wheel "
+	+ "drop sensors.</li>"
+	+ "<li>Floor: If any of the floor sensors are 0, then at least part of the robot is "
+	+ "off of the floor.</li>"
+	+ "<li>Light: The numbers represent the strength of the light sensors. The light sensors  "
+	+ "are numbered 0 to 5, and are located at:"
+	+ "<ul><li>0: Bumper Left</li><li>1: Bumper Front Left</li><li>2: Bumper Center Left</li>"
+	+ "<li>3: Bumper Center Right</li><li>4: Bumper Front Right</li><li>5: Bumper Right</li></ul></li>"
+	+ "</ul>";
+
 	var help_text_ui =
 	"Run your Code to add elements to the UI <br>"
 	+ "<h4>UI elements:</h4>"
@@ -152,7 +168,7 @@ robot_ui_t.prototype.download_gui=function()
 		{
 			config:myself.create_doorway("Configure","Set up robot hardware",help_text_config),
 			pilot:myself.create_doorway("Drive","Manually drive the robot",null),
-			sensors:myself.create_doorway("Sensors","Examine sensor data from robot",null),
+			sensors:myself.create_doorway("Sensors","Examine sensor data from robot",help_text_sensors),
 			charts:myself.create_doorway("Charts", "Chart sensor data received from robot",null),
 			states:myself.create_doorway("Code","Automatically drive the robot",help_text_states),
 			map:myself.create_doorway("Map","See where the robot thinks it is",null),
