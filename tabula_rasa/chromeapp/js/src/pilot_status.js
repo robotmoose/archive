@@ -31,7 +31,6 @@ function pilot_status_t(name,pilot_checkmark,on_connected,on_disconnected)
 	this.video_closed_ms=1000;
 	this.last_video=false;
 	var _this=this;
-
 	this.pilot_interval=setInterval(function(){_this.update();},1000);
 }
 
@@ -102,7 +101,10 @@ pilot_status_t.prototype.update=function()
 	var robot=this.name.get_robot();
 
 	if(robot&&robot.superstar&&robot.year&&robot.school&&robot.name)
-		superstar_get(this.name.get_robot(),this.path,function(frontendStatus){_this.update_pilot(frontendStatus);});
+		superstar_get(this.name.get_robot(),this.path,function(frontendStatus)
+		{
+			_this.update_pilot(frontendStatus);
+		});
 }
 
 
