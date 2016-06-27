@@ -106,10 +106,6 @@ function gui_t(div)
 		]
 	});
 
-	this.pilot_status=new pilot_status_t(this.name,this.pilot_checkmark,function()
-	{
-		_this.load_gruveo(_this.name.get_robot());
-	});
 	this.gruveo_check=setInterval(function(){
 
 		if(_this.pilot_status.last_video&&!_this.pilot_status.video_closed)
@@ -154,7 +150,10 @@ function gui_t(div)
 	this.pilot_status_text.innerHTML="Pilot connected";
 	this.main_div.appendChild(document.createElement("br"));
 
-
+	this.pilot_status=new pilot_status_t(this.name,this.pilot_checkmark,function()
+	{
+		_this.load_gruveo(_this.name.get_robot());
+	});
 }
 
 gui_t.prototype.destroy=function()
