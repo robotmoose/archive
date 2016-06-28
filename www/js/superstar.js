@@ -143,7 +143,8 @@ function superstar_get_multiple(robot,paths,on_success,on_error)
 // Get multiple JSON object from multiple robot paths
 function superstar_set_and_get_multiple(robot,set_path,set_json,get_paths,on_success,on_error)
 {
-	var request="?set="+JSON.stringify(set_json)+"&get=";
+	var set_json_str=JSON.stringify(set_json);
+	var request="?set="+set_json_str+"&get=";
 	for(var ii=0;ii<get_paths.length;++ii)
 	{
 		request+="/"+superstar_path(robot,get_paths[ii]);
@@ -151,6 +152,18 @@ function superstar_set_and_get_multiple(robot,set_path,set_json,get_paths,on_suc
 			request+=",";
 	}
 
+	var auth=robot.auth;
+	if(!robot.auth)
+		auth="";
+
+	if (robot.auth) {
+		var starpath=superstar_path(robot,set_path);
+		var seq="0"; // <- fixme: fight replay by getting sequence number from server first
+		auth = "&auth="+getAuthCode(robot.auth,starpath,set_json_str,seq);
+		//console.log(path,"Authentication code "+auth);
+	}
+
+	request+=auth;
 	var starpath=superstar_path(robot,set_path);
 	var url="";
 	if (robot.superstar) url="http://"+robot.superstar;
