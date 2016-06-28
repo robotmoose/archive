@@ -56,7 +56,6 @@ chart_interface_t.prototype.refresh=function(json) {
 		}
 
 		switch(prop) {
-			// Sensors where there can be only one.
 			case "power":
 				for(var subprop in json[prop]) {
 					if(!json[prop].hasOwnProperty(subprop)) {
@@ -79,6 +78,7 @@ chart_interface_t.prototype.refresh=function(json) {
 					}
 				}
 				break;
+			// Sensors where there can be only one.
 			case "bumper":
 			case "heartbeats":
 			case "latency":
@@ -113,6 +113,15 @@ chart_interface_t.prototype.refresh=function(json) {
 					}
 				}
 				break;
+			case "light":
+				sensor_list.push(prop);
+				if(this.doesExist(this.charts.data_points[prop])) {
+					for(i=0; i<6; ++i) {
+						this.charts.data_points[prop].datasets[0].data[i]=json[prop][i];
+					}
+					this.charts.chart[prop].update();
+				}
+				break;
 			// Create 2 Sensors
 			// case "light":
 			// 	sensor_list.push(prop);
@@ -140,7 +149,6 @@ chart_interface_t.prototype.add_chart=function() {
 	 	_this.charts.header[_this.chart_drop.value].innerHTML = _this.chart_drop.value;
 	 	_this.charts.canvas[_this.chart_drop.value].width = 500;
 	 	_this.charts.canvas[_this.chart_drop.value].height = 100;
-	 	//_this.charts.canvas[_this.chart_drop.value].style="width:70%; height:150";
 
 		_this.chart_div.appendChild(_this.charts.header[_this.chart_drop.value]);
 		_this.chart_div.appendChild(_this.charts.canvas[_this.chart_drop.value]);
@@ -156,32 +164,83 @@ chart_interface_t.prototype.add_chart=function() {
 				borderColor: "#0BB5FF"
 			}]
 		};
-
 		// Create the actual chart
-		_this.charts.chart[_this.chart_drop.value] = new Chart(_this.charts.canvas[_this.chart_drop.value].getContext('2d'), {
-			type: 'line',
-			data: _this.charts.data_points[_this.chart_drop.value],
-			options: {
-				responsive: true,
-				maintainAspectRatio: true,
-				animation: {
-					duration: 10
-				},
-				legend: {
-					display: false
-				},
-				scales: {
-					xAxes: [{
-						display: false
-					}],
-					yAxes: [{
-						gridLines: {
-							display: false
-						}
-					}]
+		switch(_this.chart_drop.value) {
+			case "light":
+				_this.charts.canvas[_this.chart_drop.value].width = 400;
+				_this.charts.canvas[_this.chart_drop.value].height = 300;
+				_this.charts.canvas[_this.chart_drop.value].style="-webkit-transform: rotate(-71deg);"
+				for(i=0; i<6; ++i) {
+					_this.charts.data_points[_this.chart_drop.value].datasets[0].data.push(0);
+					_this.charts.data_points[_this.chart_drop.value].labels.push(i.toString());
 				}
-			}
-		});
+				for(i=6; i<13; ++i) {
+					_this.charts.data_points[_this.chart_drop.value].datasets[0].data.push(0);
+					_this.charts.data_points[_this.chart_drop.value].labels.push("");
+				}
+				_this.charts.data_points[_this.chart_drop.value].datasets.push({
+					data: [],
+					fill:false,
+					pointRadius: 0,
+					borderColor: "rgba(0,0,0,0)"
+				});
+				for(i=0; i<13; ++i) {
+					_this.charts.data_points[_this.chart_drop.value].datasets[1].data.push(255);
+				}
+
+				_this.charts.data_points[_this.chart_drop.value].datasets[0].fill = true;
+				_this.charts.data_points[_this.chart_drop.value].datasets[0].pointRadius = 2;
+
+				_this.charts.chart[_this.chart_drop.value] = new Chart(_this.charts.canvas[_this.chart_drop.value].getContext('2d'), {
+					type: 'radar',
+					data: _this.charts.data_points[_this.chart_drop.value],
+					options: {
+						responsive: true,
+						maintainAspectRatio: true,
+						animation: {
+							duration: 0
+						},
+						tooltips: {
+							enabled: false
+						},
+						legend: {
+							display: false
+						},
+						scale: {
+							ticks: {
+								display: false
+							}
+						}
+					}
+				});
+				break;
+			default:
+				_this.charts.chart[_this.chart_drop.value] = new Chart(_this.charts.canvas[_this.chart_drop.value].getContext('2d'), {
+					type: 'line',
+					data: _this.charts.data_points[_this.chart_drop.value],
+					options: {
+						responsive: true,
+						maintainAspectRatio: true,
+						animation: {
+							duration: 10
+						},
+						legend: {
+							display: false
+						},
+						scales: {
+							xAxes: [{
+								display: false
+							}],
+							yAxes: [{
+								gridLines: {
+									display: false
+								}
+							}]
+						}
+					}
+				});
+				break;
+		}
 	}
 }
 
@@ -189,12 +248,12 @@ chart_interface_t.prototype.remove_chart=function() {
 	var _this = this;
 	if(_this.doesExist(_this.charts.data_points[_this.chart_drop.value])) {
 		// Clean up
+		_this.charts.chart[_this.chart_drop.value].destroy();
 		_this.chart_div.removeChild(_this.charts.canvas[_this.chart_drop.value]);
 		_this.chart_div.removeChild(_this.charts.header[_this.chart_drop.value]);
 		_this.charts.canvas[_this.chart_drop.value] = null;
 		_this.charts.header[_this.chart_drop.value] = null;
 		_this.charts.data_points[_this.chart_drop.value] = null;
-		_this.charts.chart[_this.chart_drop.value].destroy();
 		_this.charts.chart[_this.chart_drop.value] = null;
 
 	}
