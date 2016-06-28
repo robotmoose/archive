@@ -46,15 +46,15 @@ function superstar_generic(robot,path,request,on_success,on_error)
 			{
 				if(xhr.status==200)
 				{
-					//try
+					try
 					{
 						//console.log("Network "+url+" -> "+xhr.responseText);
 						if(on_success)
 							on_success(xhr.responseText);
 					}
-					//catch(error)
+					catch(error)
 					{
-					//	superstar_error(on_error,"Error handling response \""+xhr.responseText+"\" ("+error+") from "+url);
+						superstar_error(on_error,"Error handling response \""+xhr.responseText+"\" ("+error+") from "+url);
 					}
 				}
 				else
@@ -112,15 +112,15 @@ function superstar_get_multiple(robot,paths,on_success,on_error)
 			{
 				if(xhr.status==200)
 				{
-					//try
+					try
 					{
 						//console.log("Network "+url+" -> "+xhr.responseText);
 						if(on_success)
 							on_success(xhr.responseText);
 					}
-					//catch(error)
+					catch(error)
 					{
-						//superstar_error(on_error,"Error handling response \""+xhr.responseText+"\" ("+error+") from "+url);
+						superstar_error(on_error,"Error handling response \""+xhr.responseText+"\" ("+error+") from "+url);
 					}
 				}
 				else
@@ -166,15 +166,15 @@ function superstar_set_and_get_multiple(robot,set_path,set_json,get_paths,on_suc
 			{
 				if(xhr.status==200)
 				{
-					//try
+					try
 					{
 						//console.log("Network "+url+" -> "+xhr.responseText);
 						if(on_success)
 							on_success(xhr.responseText);
 					}
-					//catch(error)
+					catch(error)
 					{
-						//superstar_error(on_error,"Error handling response \""+xhr.responseText+"\" ("+error+") from "+url);
+						superstar_error(on_error,"Error handling response \""+xhr.responseText+"\" ("+error+") from "+url);
 					}
 				}
 				else
