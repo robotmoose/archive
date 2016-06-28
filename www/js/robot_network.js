@@ -23,10 +23,6 @@ function robot_network_t()
 							//console.log(JSON.stringify(json));
 						}
 					);
-					superstar_sub(_this.robot,"experiments",function(json)
-					{
-						_this.experiments=json;
-					});
 				}
 			},
 			ms:300
@@ -35,8 +31,12 @@ function robot_network_t()
 			int:null,
 			func:function()
 			{
-				//if(valid_robot(_this.robot))
+				if(valid_robot(_this.robot))
 				{
+					superstar_sub(_this.robot,"experiments",function(json)
+					{
+						_this.experiments=json;
+					});
 				}
 			},
 			ms:1000
