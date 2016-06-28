@@ -185,7 +185,7 @@ chart_interface_t.prototype.add_chart=function() {
 					borderColor: "rgba(0,0,0,0)"
 				});
 				for(i=0; i<13; ++i) {
-					_this.charts.data_points[_this.chart_drop.value].datasets[1].data.push(255);
+					_this.charts.data_points[_this.chart_drop.value].datasets[1].data.push(175);
 				}
 
 				_this.charts.data_points[_this.chart_drop.value].datasets[0].fill = true;
