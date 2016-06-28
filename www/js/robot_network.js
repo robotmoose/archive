@@ -19,8 +19,10 @@ function robot_network_t()
 						["active_experiment","config","frontendStatus","sensors"],
 						function(json)
 						{
-							_this.active_experiment=json;
-							//console.log(JSON.stringify(json));
+							_this.active_experiment=json[0];
+							_this.config=json[1];
+							_this.frontendStatus=json[2];
+							_this.sensors=json[3];
 						}
 					);
 				}

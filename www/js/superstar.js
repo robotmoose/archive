@@ -116,7 +116,7 @@ function superstar_get_multiple(robot,paths,on_success,on_error)
 					{
 						//console.log("Network "+url+" -> "+xhr.responseText);
 						if(on_success)
-							on_success(xhr.responseText);
+							on_success(JSON.parse(xhr.responseText));
 					}
 					catch(error)
 					{
@@ -170,7 +170,7 @@ function superstar_set_and_get_multiple(robot,set_path,set_json,get_paths,on_suc
 					{
 						//console.log("Network "+url+" -> "+xhr.responseText);
 						if(on_success)
-							on_success(xhr.responseText);
+							on_success(JSON.parse(xhr.responseText));
 					}
 					catch(error)
 					{
