@@ -35,7 +35,6 @@ input_t.prototype.keydown=function(evt)
 
 	this.keys_down[evt.keyCode]=true;
 	this.user_event();
-	console.log("DOWN");
 };
 
 input_t.prototype.keyup=function(evt)
@@ -43,7 +42,6 @@ input_t.prototype.keyup=function(evt)
 	this.keys_released[evt.keyCode]=true;
 	this.keys_down[evt.keyCode]=false;
 	this.user_event();
-	console.log("UP");
 };
 
 
