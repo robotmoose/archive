@@ -5,6 +5,10 @@ function modal_loadstate_t(div, state_table)
 {
 	this.modal=new modal_t(div);
 	this.browse_input=document.createElement("input");
+	this.name_input=document.createElement("input");
+	this.name_used_error=document.createElement("div");
+	this.overwrite_label=document.createElement("label");
+	this.overwrite_check=document.createElement("input");
 	this.load_button=document.createElement("input");
 	this.cancel_button=document.createElement("input");
 
@@ -24,6 +28,25 @@ function modal_loadstate_t(div, state_table)
 	}
 	this.modal.get_content().appendChild(this.browse_input);
 
+	this.name_input.type="text";
+	this.name_input.placeholder="Experiment name";
+	this.name_input.style.marginTop="5px";
+	this.name_input.style.marginBottom="5px";
+	this.modal.get_content().appendChild(this.name_input);
+
+	this.name_used_error.className="alert alert-danger";
+	this.name_used_error.role="alert";
+	this.name_used_error.innerText="An experiment with this name already exists.";
+	this.name_used_error.style.display="none";
+	this.modal.get_content().appendChild(this.name_used_error);
+
+	this.overwrite_label.innerText="Overwrite experiment if it already exists? ";
+	this.overwrite_label.style.display="block";
+	this.overwrite_label.appendChild(this.overwrite_check);
+	this.modal.get_content().appendChild(this.overwrite_label);
+	
+	this.overwrite_check.type="checkbox";
+
 	this.load_button.className="btn btn-primary";
 	this.load_button.disabled=true;
 	this.load_button.type="button";
@@ -40,13 +63,20 @@ function modal_loadstate_t(div, state_table)
 		{
 			try
 			{
-				//FIXME: HOW SHOULD THIS HANDLE OVERWRITING? SHOULD IT AT ALL?
 				var json=JSON.parse(reader.result);
-				state_table.build(json);
-				state_table.upload_active_experiment(state_table.active_experiment);
-				state_table.upload(state_table.robot);
-				state_table.update_states_m();
-				myself.modal.hide();
+				state_table.experiment_exists(myself.name_input.value, function(doesnt_exist) {
+					if (doesnt_exist || myself.overwrite_check.checked) {
+						state_table.create_new_experiment(myself.name_input.value);
+						state_table.active_experiment=myself.name_input.value;
+						state_table.build(json);
+						state_table.upload_active_experiment(state_table.active_experiment);
+						state_table.upload(state_table.robot);
+						state_table.update_states_m();
+						myself.modal.hide();
+					} else {
+						myself.name_used_error.style.display="block";
+					}
+				});
 			}
 			catch(error)
 			{

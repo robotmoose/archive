@@ -159,7 +159,15 @@ Things to look at:
 * Are you getting a heartbeat in the "Sensors" tab?  If no heartbeat is listed, configure one.  If the heartbeat is shown but not counting, the problem is either the backend or the Arduino.  Is the backend laptop running, and does it have internet?  Is the backend running, and does it display any error messages?  Is the Arduino plugged in?
 * Is the Roomba running?  If the heartbeat is running but the "light" sensors are not changing, you may need to go to the "Configure" tab and hit Configure again to restart the Roomba.  Also check the Roomba battery in the "Sensor" tab; a Roomba with a low battery will not drive.
 
+### Problem: Superstar compilation fails with "Missing dependency operator"
+If you get an error similar to this when you try to `make` Superstar:
 
+	make: "/usr/home/christopher/Code/robotmoose/superstar/Makefile" line 7: Missing dependency operator
+	make: "/usr/home/christopher/Code/robotmoose/superstar/Makefile" line 9: Need an operator
+	make: Fatal errors encountered -- cannot continue
+	make: stopped in /usr/home/christopher/Code/robotmoose/superstar
+	
+The problem is that Superstar's `Makefile` uses GNU make-specific features. To solve the problem, install `gmake` on your system (if it's not installed already), then run `gmake` instead of `make`.
 
 
 ## Project Background
