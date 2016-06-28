@@ -82,6 +82,7 @@ robot_ui_t.prototype.create_menus=function()
 				myself.robot.year+"/"+myself.robot.school+"/"+myself.robot.name+"\"";
 			myself.download_gui();
 			//myself.widgets.chat.set_robot(robot);
+			robot_network.set_robot(robot);
 		}
 	};
 }
@@ -210,22 +211,22 @@ robot_ui_t.prototype.run_interval=function() {
 	if (myself.sensor_data_count<2)
 	{ // request more sensor data
 		this.sensor_data_count++;
-		superstar_get(this.robot,"sensors",
-			function(sensors) // sensor data has arrived:
-			{
+		//superstar_get(this.robot,"sensors",
+			//function(sensors) // sensor data has arrived:
+			//{
 				myself.sensor_data_count--;
 
 				if (!myself.doorways.sensors.minimized)
-					myself.widgets.sensors.refresh(sensors);
+					myself.widgets.sensors.refresh(robot_network.sensors);
 
 				if (!myself.doorways.map.minimized)
-					myself.widgets.map.refresh(sensors);
+					myself.widgets.map.refresh(robot_network.sensors);
 
 				if(!myself.doorways.charts.minimized)
-					myself.widgets.charts.refresh(sensors);
+					myself.widgets.charts.refresh(robot_network.sensors);
 
-				myself.state_runner.VM_sensors=sensors;
-			});
+				myself.state_runner.VM_sensors=robot_network.sensors;
+			//});
 	}
 
 	this.upload_gui();

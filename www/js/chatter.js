@@ -86,11 +86,14 @@ chatter_t.prototype.create_interval=function()
 		clearInterval(this.chat_interval);
 	this.chat_interval=setInterval(function()
 	{
-		if(valid_robot(_this.robot))
-			superstar_generic(_this.robot,"chat","?get",function(data)
-			{
-				_this.history.value=data;
-				_this.history.scrollTop=_this.history.scrollHeight;
-			});
+		//if(valid_robot(_this.robot))
+			//superstar_generic(_this.robot,"chat","?get",function(data)
+			//{
+				if(_this.history.value!=robot_network.chat)
+				{
+					_this.history.value=robot_network.chat;
+					_this.history.scrollTop=_this.history.scrollHeight;
+				}
+			//});
 	},500);
 }

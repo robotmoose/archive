@@ -678,51 +678,6 @@ void superstar_http_handler(struct mg_connection *conn, int ev,void *param) {
 			printf("  Authentication mismatch: write to '%s' not authorized by '%s'\n",
 				starpath.c_str(), sentauth);
 		}
-
-		//New optional syntax: /superstar/path1?set=newval1&get=path2,path3,path4
-		if(0<=mg_get_http_var(&m->query_string,"get",buf,NBUF))
-		{
-			std::string retArray="[";
-			char* bufLoc=buf;
-			while(0!=*bufLoc)
-			{
-				//find next comma
-				char* nextComma=strchr(bufLoc,',');
-
-				//null terminate at comma
-				if(nextComma!=0)
-					*nextComma=0;
-
-				//add separator to output
-				if(retArray.size()>1)
-					retArray+=",";
-
-				//add path to output
-				std::string value=superstar_db.get(bufLoc);
-
-				// mark empty JSON objects
-				if(value=="")
-					value="{}";
-
-				printf("   mget path: %s -> %s\n",bufLoc,value.c_str());
-				retArray+=value;
-
-				//done with this path
-				if(nextComma==0)
-					break;
-
-				// move down string
-				else
-					bufLoc=nextComma+1;
-			}
-			retArray+="]";
-			if (auth_error) {
-				send_json_auth_error(conn, retArray);
-			} else {
-				send_json(conn,retArray);
-			}
-			return;
-		}
 	}
 
 	//Not writing a new value
@@ -770,6 +725,51 @@ void superstar_http_handler(struct mg_connection *conn, int ev,void *param) {
 		}
 	}
 
+	//New optional syntax: /superstar/path1?set=newval1&get=path2,path3,path4
+	if(0<=mg_get_http_var(&m->query_string,"get",buf,NBUF))
+	{
+		std::string retArray="[";
+		char* bufLoc=buf;
+		while(0!=*bufLoc)
+		{
+			//find next comma
+			char* nextComma=strchr(bufLoc,',');
+
+			//null terminate at comma
+			if(nextComma!=0)
+				*nextComma=0;
+
+			//add separator to output
+			if(retArray.size()>1)
+				retArray+=",";
+
+			//add path to output
+			std::string value=superstar_db.get(bufLoc);
+
+			// mark empty JSON objects
+			if(value=="")
+				value="{}";
+
+			printf("   mget path: %s -> %s\n",bufLoc,value.c_str());
+			retArray+=value;
+
+			//done with this path
+			if(nextComma==0)
+				break;
+
+			// move down string
+			else
+				bufLoc=nextComma+1;
+		}
+		retArray+="]";
+		if (auth_error) {
+			send_json_auth_error(conn, retArray);
+		} else {
+			send_json(conn,retArray);
+		}
+		return;
+	}
+
 
   content+="</BODY></HTML>";
 
@@ -782,7 +782,7 @@ void superstar_http_handler(struct mg_connection *conn, int ev,void *param) {
 				"\r\n"
 				"%s",
 				content.size(), content.c_str());
-	} else {	
+	} else {
 		mg_printf(conn,
 				"HTTP/1.1 200 OK\r\n"
 				"Content-Type: text/html\r\n"

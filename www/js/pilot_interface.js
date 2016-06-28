@@ -263,7 +263,7 @@ pilot_interface_t.prototype.pilot_mouse=function(event,mouse_down_del,mouse_in_d
 	if (mouse_down_del<0) this.mouse_down=-1;
 
 	// console.log("Mouse event: down="+this.mouse_down+"  down del="+mouse_down_del+"   in="+this.mouse_in_div+"  in del="+mouse_in_del);
-	
+
 // Allow user to set maximum power
 	var maxPower=this.get_pilot_power();
 
@@ -347,12 +347,14 @@ pilot_interface_t.prototype.pilot_keyboard=function()
 // It's not clear a pilot needs to download data, but it's easy:
 pilot_interface_t.prototype.download=function(robot)
 {
-	superstar_get(robot,"pilot",function(newPilot) { this.pilot=newPilot; });
+	//superstar_get(robot,"pilot",function(newPilot) { this.pilot=newPilot; });
+	//this.pilot=robot_network.pilot;
 }
 
 pilot_interface_t.prototype.upload=function(robot)
-{	
-	superstar_set(robot,"pilot",this.pilot);
+{
+	//superstar_set(robot,"pilot",this.pilot);
+	robot_network.pilot=this.pilot;
 }
 
 // This is a simple placeholder, to get things working for now:

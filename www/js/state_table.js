@@ -146,25 +146,29 @@ state_table_t.prototype.destroy=function()
 
 state_table_t.prototype.get_active_experiment=function(onfinish)
 {
-	if(valid_robot(this.robot))
+	onfinish(robot_network.active_experiment);
+	/*if(valid_robot(this.robot))
 		superstar_get(this.robot,"active_experiment",function(active)
 		{
 			if(onfinish)
 				onfinish(active);
-		});
+		});*/
 }
 
 state_table_t.prototype.get_experiments=function(active,onfinish)
 {
 	var _this=this;
 	if(valid_robot(this.robot))
-		superstar_sub(this.robot,"experiments",function(json)
-		{
+	{
+		/*superstar_sub(this.robot,"experiments",function(json)
+		{*/
+			var json=robot_network.experiments;
 			_this.drop.build(json,active||_this.next_active_experiment);
 			_this.next_active_experiment=null;
 			if(onfinish)
 				onfinish();
-		});
+		//});
+	}
 }
 
 state_table_t.prototype.download=function(robot,onfinish)
@@ -221,8 +225,9 @@ state_table_t.prototype.experiment_exists=function(name,onfinish)
 	if(valid_robot(this.robot))
 	{
 		var _this=this;
-		superstar_sub(this.robot,"experiments",function(experiments)
-		{
+		//superstar_sub(this.robot,"experiments",function(experiments)
+		//{
+			var experiments=robot_network.experiments;
 			var found=false;
 			for(k in experiments)
 				if(decodeURIComponent(experiments[k])==name)
@@ -232,7 +237,7 @@ state_table_t.prototype.experiment_exists=function(name,onfinish)
 				}
 			if(onfinish)
 				onfinish(!found);
-		});
+		//});
 	}
 }
 

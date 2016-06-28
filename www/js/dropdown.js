@@ -74,6 +74,9 @@ dropdown_t.prototype.selected_index=function()
 
 dropdown_t.prototype.build=function(list,on_loaded_value)
 {
+	if(!list)
+		return;
+
 	if(document.activeElement!=this.select)
 	{
 		var old="";

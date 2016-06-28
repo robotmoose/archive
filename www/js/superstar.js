@@ -52,10 +52,10 @@ function superstar_generic(robot,path,request,on_success,on_error)
 						if(on_success)
 							on_success(xhr.responseText);
 					}
-					/*catch(error)
+					//catch(error)
 					{
-						superstar_error(on_error,"Error handling response \""+xhr.responseText+"\" ("+error+") from "+url);
-					}*/
+					//	superstar_error(on_error,"Error handling response \""+xhr.responseText+"\" ("+error+") from "+url);
+					}
 				}
 				else
 				{
@@ -85,6 +85,115 @@ function superstar_get(robot,path,on_success,on_error)
 		}
 	,on_error);
 }
+
+// Get multiple JSON object from multiple robot paths
+function superstar_get_multiple(robot,paths,on_success,on_error)
+{
+	var request="?get=";
+	for(var ii=0;ii<paths.length;++ii)
+	{
+		request+="/"+superstar_path(robot,paths[ii]);
+		if(ii+1<paths.length)
+			request+=",";
+	}
+
+	var starpath=superstar_path(robot,"");
+	var url="";
+	if (robot.superstar) url="http://"+robot.superstar;
+	url+="/superstar/"+starpath+request;
+
+	try
+	{
+		var xhr=new XMLHttpRequest();
+		xhr.open("GET",url,true);
+		xhr.onreadystatechange=function()
+		{
+			if(xhr.readyState==4)
+			{
+				if(xhr.status==200)
+				{
+					//try
+					{
+						//console.log("Network "+url+" -> "+xhr.responseText);
+						if(on_success)
+							on_success(xhr.responseText);
+					}
+					//catch(error)
+					{
+						//superstar_error(on_error,"Error handling response \""+xhr.responseText+"\" ("+error+") from "+url);
+					}
+				}
+				else
+				{
+					superstar_error(on_error,"Error receiving from server (status "+xhr.status+") from "+url);
+				}
+			}
+		}
+
+		xhr.send();
+		return xhr;
+	}
+	catch(error)
+	{
+		superstar_error(on_error,"Network error ("+error+") from "+url);
+		return null;
+	}
+}
+
+// Get multiple JSON object from multiple robot paths
+function superstar_set_and_get_multiple(robot,set_path,set_json,get_paths,on_success,on_error)
+{
+	var request="?set="+JSON.stringify(set_json)+"&get=";
+	for(var ii=0;ii<get_paths.length;++ii)
+	{
+		request+="/"+superstar_path(robot,get_paths[ii]);
+		if(ii+1<get_paths.length)
+			request+=",";
+	}
+
+	var starpath=superstar_path(robot,set_path);
+	var url="";
+	if (robot.superstar) url="http://"+robot.superstar;
+	url+="/superstar/"+starpath+request;
+
+	try
+	{
+		var xhr=new XMLHttpRequest();
+		xhr.open("GET",url,true);
+		xhr.onreadystatechange=function()
+		{
+			if(xhr.readyState==4)
+			{
+				if(xhr.status==200)
+				{
+					//try
+					{
+						//console.log("Network "+url+" -> "+xhr.responseText);
+						if(on_success)
+							on_success(xhr.responseText);
+					}
+					//catch(error)
+					{
+						//superstar_error(on_error,"Error handling response \""+xhr.responseText+"\" ("+error+") from "+url);
+					}
+				}
+				else
+				{
+					superstar_error(on_error,"Error receiving from server (status "+xhr.status+") from "+url);
+				}
+			}
+		}
+
+		xhr.send();
+		return xhr;
+	}
+	catch(error)
+	{
+		superstar_error(on_error,"Network error ("+error+") from "+url);
+		return null;
+	}
+}
+
 
 // Subscribe to JSON changes at this robot path.
 //  This repeatedly calls on_success with the updated objects
