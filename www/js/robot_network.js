@@ -16,7 +16,7 @@ function robot_network_t()
 						_this.robot,
 						"pilot",
 						_this.pilot,
-						["active_experiment","chat","config","frontendStatus","sensors"],
+						["active_experiment","config","frontendStatus","sensors"],
 						function(json)
 						{
 							_this.active_experiment=json;
@@ -36,6 +36,11 @@ function robot_network_t()
 					superstar_sub(_this.robot,"experiments",function(json)
 					{
 						_this.experiments=json;
+					});
+
+					superstar_generic(_this.robot,"chat","?get",function(str)
+					{
+						_this.chat=str;
 					});
 				}
 			},
