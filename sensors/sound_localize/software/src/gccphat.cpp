@@ -11,24 +11,52 @@
 #include "../include/gccphat.h"
 #include <string.h>
 
-// class gccphat_manager {
-// public:
-//     fftw_complex * signala_ext
-//     fftw_complex * signalb_ext
-//     fftw_complex * out_shifted
-//     fftw_complex * outa
-//     fftw_complex * outb
-// };
+class GccphatManager {
+    public:
+        GccphatManager(int);
+        ~GccphatManager();
+        friend std::pair<double, int> gccphat(fftw_complex * signala, fftw_complex * signalb, fftw_complex * result);
+    private:
+        fftw_complex * signala_ext;
+        fftw_complex * signalb_ext;
+        fftw_complex * out_shifted;
+        fftw_complex * outa;
+        fftw_complex * outb;
+        fftw_complex * out;
+        int numsaples_fft;
+        fftw_plan fft;
+        fftw_plan ifft;
+};
 
-void makeGccphatPlans(fftw_plan & fft, fftw_plan & ifft, int N) {
-    fftw_complex * signal_ext = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * N - 1));
-    fftw_complex * out = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * N - 1));
+GccphatManager::GccphatManager(int N) : 
+    signala_ext( (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * N - 1)) ),
+    signalb_ext( (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * N - 1)) ),
+    out_shifted( (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * N - 1)) ),
+    outa( (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * N - 1)) ),
+    outb( (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * N - 1)) ),
+    out( (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * N - 1)) ),
+    numsaples_fft(N)
+    {
+        fft = fftw_plan_dft_1d(2 * N - 1, signala_ext, out, FFTW_FORWARD, FFTW_MEASURE);
+        ifft = fftw_plan_dft_1d(2 * N - 1, out, signala_ext, FFTW_BACKWARD, FFTW_MEASURE);
+    }
 
-    fft = fftw_plan_dft_1d(2 * N - 1, signal_ext, out, FFTW_FORWARD, FFTW_MEASURE);
-    ifft = fftw_plan_dft_1d(2 * N - 1, out, signal_ext, FFTW_BACKWARD, FFTW_MEASURE);
-
-    fftw_free(signal_ext);
+GccphatManager::~GccphatManager() {
+    fftw_free(signala_ext);
+    fftw_free(signalb_ext);
+    fftw_free(out_shifted);
     fftw_free(out);
+    fftw_free(outa);
+    fftw_free(outb);
+    fftw_destroy_plan(fft);
+    fftw_destroy_plan(ifft);
+    fftw_cleanup();
+}
+
+GccphatManager * gccphat_manager;
+
+void gccphatInit(int N) {
+    gccphat_manager = new GccphatManager(N);
 }
 
 void printGccphatResult(std::pair<double, int> max_corr_pair, int signum1, int signum2, double fs) {
@@ -41,13 +69,14 @@ void printGccphatResult(std::pair<double, int> max_corr_pair, int signum1, int s
         std::printf("Signals %d and %d are fully synchronized.\n", signum1, signum2);
 }
 
-std::pair<double, int> gccphat(fftw_complex * signala, fftw_complex * signalb, fftw_complex * result, int N, fftw_plan & fft, fftw_plan & ifft) {
-    fftw_complex * signala_ext = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * N - 1));
-    fftw_complex * signalb_ext = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * N - 1));
-    fftw_complex * out_shifted = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * N - 1));
-    fftw_complex * outa = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * N - 1));
-    fftw_complex * outb = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * N - 1));
-    fftw_complex * out = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * N - 1));
+std::pair<double, int> gccphat(fftw_complex * signala, fftw_complex * signalb, fftw_complex * result) {
+    fftw_complex * signala_ext = gccphat_manager -> signala_ext;
+    fftw_complex * signalb_ext = gccphat_manager -> signalb_ext;
+    fftw_complex * out_shifted = gccphat_manager -> out_shifted;
+    fftw_complex * outa = gccphat_manager -> outa;
+    fftw_complex * outb = gccphat_manager -> outb;
+    fftw_complex * out = gccphat_manager -> out;
+    int N = gccphat_manager -> numsaples_fft;
 
     //zeropadding
     memset (signala_ext, 0, sizeof(fftw_complex) * (N - 1));
@@ -55,8 +84,8 @@ std::pair<double, int> gccphat(fftw_complex * signala, fftw_complex * signalb, f
     memcpy (signalb_ext, signalb, sizeof(fftw_complex) * N);
     memset (signalb_ext + N, 0, sizeof(fftw_complex) * (N - 1));
 
-    fftw_execute_dft(fft, signala_ext, outa);
-    fftw_execute_dft(fft, signalb_ext, outb);
+    fftw_execute_dft(gccphat_manager -> fft, signala_ext, outa);
+    fftw_execute_dft(gccphat_manager -> fft, signalb_ext, outb);
 
 
    // double scale = 1.0/(2 * N -1);
@@ -68,7 +97,7 @@ std::pair<double, int> gccphat(fftw_complex * signala, fftw_complex * signalb, f
         out_cmplx[i] = outa_cmplx[i] * conj(outb_cmplx[i])/(abs(outa_cmplx[i] * conj(outb_cmplx[i])));
     // *****
 
-    fftw_execute_dft(ifft, out, result);
+    fftw_execute_dft(gccphat_manager -> ifft, out, result);
 
     std::pair<double, int> max_corr_pair = std::make_pair(result[0][0],-N+1);
     for(int i=0; i<2*N-1; ++i) {
@@ -77,13 +106,6 @@ std::pair<double, int> gccphat(fftw_complex * signala, fftw_complex * signalb, f
             max_corr_pair.second = i-N+1; 
         }
     }
-
-    fftw_free(signala_ext);
-    fftw_free(signalb_ext);
-    fftw_free(out_shifted);
-    fftw_free(out);
-    fftw_free(outa);
-    fftw_free(outb);
 
     return max_corr_pair;
 }

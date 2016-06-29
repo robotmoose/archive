@@ -52,16 +52,14 @@ int main() {
 		signal3[i][0] = std::stod(value);
 	}
 
-	// Since ffts and iffts will always be of the same length and type, create the plans only once to boost efficiency.
-    fftw_plan fft, ifft;
-    makeGccphatPlans(fft, ifft, NUMSAMPLES_FFT);
 
+	gccphatInit(NUMSAMPLES_FFT); // Makes fftw plans and allocates memory
 	std::pair<double, int> max_corr_pair_12, max_corr_pair_13, max_corr_pair_23;
-	max_corr_pair_12 = gccphat(signal1, signal2, result, NUMSAMPLES_FFT, fft, ifft);
+	max_corr_pair_12 = gccphat(signal1, signal2, result);
 	printGccphatResult(max_corr_pair_12, 1, 2, FS);
-	max_corr_pair_13 = gccphat(signal1, signal3, result, NUMSAMPLES_FFT, fft, ifft);
+	max_corr_pair_13 = gccphat(signal1, signal3, result);
 	printGccphatResult(max_corr_pair_13, 1, 3, FS);
-	max_corr_pair_23 = gccphat(signal2, signal3, result, NUMSAMPLES_FFT, fft, ifft);
+	max_corr_pair_23 = gccphat(signal2, signal3, result);
 	printGccphatResult(max_corr_pair_23, 2, 3, FS);
 	// ***** End DSP Section ***** //
 
@@ -71,7 +69,7 @@ int main() {
 	std::uint32_t numiters = 1000;
 	for(int i=0; i<numiters; ++i) {
 		auto begin = std::chrono::high_resolution_clock::now();
-		gccphat(signal1, signal2, result, NUMSAMPLES_FFT, fft, ifft);
+		gccphat(signal1, signal2, result);
 		auto end = std::chrono::high_resolution_clock::now();
 		avg += std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count();
 	}
@@ -96,8 +94,6 @@ int main() {
 	fftw_free(signal2);
 	fftw_free(signal3);
 	fftw_free(result);
-	fftw_destroy_plan(fft);
-	fftw_destroy_plan(ifft);
 	fftw_cleanup();
 
 	// ********** Data Parsing and Processing Setup Begin ********** // 
