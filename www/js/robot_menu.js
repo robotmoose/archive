@@ -20,14 +20,42 @@ function robot_menu_t(div)
 
 	this.menu.nav.className="navbar navbar-default";
 	this.menu.nav.style.marginBottom=-1;
+	this.menu.nav.style["z-index"]=999;
+	//this.menu.nav.navbar.open.style["margin-bottom"] = ""
 	this.element.appendChild(this.menu.nav);
 
 	this.menu.div.className="container-fluid";
 	this.menu.nav.appendChild(this.menu.div);
 
+	this.menu.navheader=document.createElement("div");
+	this.menu.navheader.className="navbar-header";
+	this.menu.div.appendChild(this.menu.navheader);
+
+	this.menu.collapse_btn=document.createElement("button");
+	this.menu.collapse_btn.className="navbar-toggle";
+	this.menu.collapse_btn.setAttribute("data-toggle","collapse");
+	this.menu.collapse_btn.setAttribute("data-target","#robot_nav");
+	this.menu.navheader.appendChild(this.menu.collapse_btn);
+
+	this.menu.collapse_span=[];
+	this.menu.collapse_span[0]=document.createElement("span");
+	this.menu.collapse_span[0].className="icon-bar";
+	this.menu.collapse_span[1]=document.createElement("span");
+	this.menu.collapse_span[1].className="icon-bar";
+	this.menu.collapse_span[2]=document.createElement("span");
+	this.menu.collapse_span[2].className="icon-bar";
+	for(i=0; i<3; ++i)
+		this.menu.collapse_btn.appendChild(this.menu.collapse_span[i]);
+
+	this.menu.collapse_div=document.createElement("div");
+	this.menu.collapse_div.className="collapse navbar-collapse in";
+	this.menu.collapse_div.setAttribute("aria-expanded","true");
+	this.menu.collapse_div.id="robot_nav";
+	this.menu.div.appendChild(this.menu.collapse_div);
+
 	this.menu.ul.className="nav navbar-nav";
 	this.menu.ul.style.width="100%";
-	this.menu.div.appendChild(this.menu.ul);
+	this.menu.collapse_div.appendChild(this.menu.ul);
 
 	this.menu.status.li.style.float="right";
 	this.menu.ul.appendChild(this.menu.status.li);

@@ -3,6 +3,7 @@
 
 function modal_connect_t(div)
 {
+	div.style["z-index"]=1000;
 	this.superstar_root="/superstar/robots";
 	this.schools=[];
 	this.robots=[];
