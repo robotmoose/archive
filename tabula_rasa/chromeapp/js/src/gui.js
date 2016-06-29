@@ -50,6 +50,7 @@ function gui_t(div)
 		{
 			_this.connection.gui_robot(robot);
 			_this.load_gruveo(robot);
+			_this.chat.load(robot);
 		}
 
 	);
@@ -78,11 +79,13 @@ function gui_t(div)
 		}
 	);
 
+	
 	this.connection.on_name_set=function(robot)
 	{
+		console.log("In on_name_set");
+		console.log(robot);
 		_this.name.load(robot);
 		_this.sound_player.load(robot);
-		_this.serial_selector.load(robot);
 	};
 
 	this.connection.on_auth_error=function(err)
@@ -154,6 +157,7 @@ function gui_t(div)
 	{
 		_this.load_gruveo(_this.name.get_robot());
 	});
+	this.chat=new chatter_t(this.main_div,this.name.get_robot(),20,"Robot Caretaker");
 }
 
 gui_t.prototype.destroy=function()
