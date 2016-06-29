@@ -98,6 +98,10 @@ function gui_t(div)
 
 	this.state_side_bar=document.createElement("div");
 
+	this.chat_div=document.createElement("div");
+	maximize(this.chat_div);
+	this.chat_div.style.height="100%";
+
 	$("#content").w2layout
 	({
 		name:"app_layout",
@@ -105,7 +109,8 @@ function gui_t(div)
 		[
 			{type:"left",resizable:true,content:this.gruveo_div,size:"60%"},
 			{type:"main",resizable:true,content:this.main_div},
-			{type:"preview",resizable:true,content:this.status_viewer.el,size:"55%"}
+			{type:"preview",resizable:true,content:this.status_viewer.el,size:"55%"},
+			{type:"bottom",resizable:true,content:this.chat_div,size:"20%"}
 		]
 	});
 
@@ -157,7 +162,7 @@ function gui_t(div)
 	{
 		_this.load_gruveo(_this.name.get_robot());
 	});
-	this.chat=new chatter_t(this.main_div,this.name.get_robot(),20,"Robot Caretaker");
+	this.chat=new chatter_t(this.chat_div,this.name.get_robot(),20,"Caretaker");
 }
 
 gui_t.prototype.destroy=function()

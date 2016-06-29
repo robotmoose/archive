@@ -1,8 +1,8 @@
-function new_div(el,id)
+function new_div(el)
 {
 	var div=document.createElement("div");
-	if(el) div.id=id;
-	el.appendChild(div);
+	if(el)
+		el.appendChild(div);
 	clear_margin_padding(div);
 	return div;
 }
@@ -10,7 +10,8 @@ function new_div(el,id)
 function new_table(el,rows,cells_per_row)
 {
 	var table=document.createElement("table");
-	el.appendChild(table);
+	if(el)
+		el.appendChild(table);
 	table.style.borderSpacing="0px";
 
 	for(var rr=0;rr<rows;++rr)
