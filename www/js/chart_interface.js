@@ -61,13 +61,13 @@ chart_interface_t.prototype.refresh=function(json) {
 					if(!json[prop].hasOwnProperty(subprop)) {
 						continue;
 					}
-					if(subprop == "servo") {
+					if(subprop == "servo" || subprop == "pwm") {
 						for(i=0; i < json[prop][subprop].length; ++i) {
 							sensor_list.push(subprop + "_" + i);
 							if(this.doesExist(this.charts.data_points[subprop + "_" + i])) {
 								this.charts.data_points[subprop + "_" + i].datasets[0].data.push(json[prop][subprop][i]);
 								this.charts.data_points[subprop + "_" + i].labels.push(0);
-								if(this.charts.data_points[subprop + "_" + i].datasets[0].data.length > 30) {
+								if(this.charts.data_points[subprop + "_" + i].datasets[0].data.length > 60) {
 									this.charts.data_points[subprop + "_" + i].datasets[0].data.shift();
 									this.charts.data_points[subprop + "_" + i].labels.shift();
 								}
@@ -113,6 +113,7 @@ chart_interface_t.prototype.refresh=function(json) {
 					}
 				}
 				break;
+			// Create 2 Sensors
 			case "light":
 				sensor_list.push(prop);
 				if(this.doesExist(this.charts.data_points[prop])) {
@@ -121,13 +122,17 @@ chart_interface_t.prototype.refresh=function(json) {
 					}
 					this.charts.chart[prop].update();
 				}
+
 				break;
-			// Create 2 Sensors
-			// case "light":
-			// 	sensor_list.push(prop);
-			// 	if(this.doesExist(this.charts.data[prop])){
-			// 		this.charts.data[prop + "_" + i].append(new Date().getTime(), json[prop][i]);
-			// 	}
+			case "floor":
+				sensor_list.push(prop);
+				if(this.doesExist(this.charts.data_points[prop])) {
+					for(i=0; i<4; ++i) {
+						this.charts.data_points[prop].datasets[0].data[i]=json[prop][i]
+					}
+					this.charts.chart[prop].update();
+				}
+				break;
 			default:
 				break;
 		}
@@ -168,8 +173,8 @@ chart_interface_t.prototype.add_chart=function() {
 		switch(_this.chart_drop.value) {
 			case "light":
 				_this.charts.canvas[_this.chart_drop.value].width = 400;
-				_this.charts.canvas[_this.chart_drop.value].height = 300;
-				_this.charts.canvas[_this.chart_drop.value].style="-webkit-transform: rotate(-71deg);"
+				_this.charts.canvas[_this.chart_drop.value].height = 200;
+				// _this.charts.canvas[_this.chart_drop.value].style="-webkit-transform: rotate(-71deg);"
 				for(i=0; i<6; ++i) {
 					_this.charts.data_points[_this.chart_drop.value].datasets[0].data.push(0);
 					_this.charts.data_points[_this.chart_drop.value].labels.push(i.toString());
@@ -198,7 +203,7 @@ chart_interface_t.prototype.add_chart=function() {
 						responsive: true,
 						maintainAspectRatio: true,
 						animation: {
-							duration: 0
+							duration: 300
 						},
 						tooltips: {
 							enabled: false
@@ -213,6 +218,37 @@ chart_interface_t.prototype.add_chart=function() {
 						}
 					}
 				});
+				break;
+			case "floor":
+				for(i=0; i<4; ++i) {
+					_this.charts.data_points[_this.chart_drop.value].datasets[0].data.push(0);
+					_this.charts.data_points[_this.chart_drop.value].labels.push(i.toString());
+				}
+				_this.charts.data_points[_this.chart_drop.value].datasets[0].backgroundColor = "#0BB5FF";
+				_this.charts.chart[_this.chart_drop.value] = new Chart(_this.charts.canvas[_this.chart_drop.value].getContext('2d'), {
+					type: 'bar',
+					data: _this.charts.data_points[_this.chart_drop.value],
+					options: {
+						responsive: true,
+						maintainAspectRatio: true,
+						animation: {
+							duration: 300
+						},
+						tooltips: {
+							enabled: false
+						},
+						legend: {
+							display: false
+						},
+						scales: {
+							yAxes: [{
+								ticks: {
+									beginAtZero: true
+								}
+							}]
+						}
+					}
+				 });
 				break;
 			default:
 				_this.charts.chart[_this.chart_drop.value] = new Chart(_this.charts.canvas[_this.chart_drop.value].getContext('2d'), {
