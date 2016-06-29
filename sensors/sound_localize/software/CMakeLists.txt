@@ -14,7 +14,7 @@ endif()
 
 include_directories(include)
 
-set(dsp_SRCS src/xcorr.cpp)
+set(dsp_SRCS src/gccphat.cpp)
 set(serial_SRCS src/serial.cc include/serial/serial.h include/serial/v8stdint.h)
 if(UNIX)
     list(APPEND serial_SRCS src/impl/unix.cc)

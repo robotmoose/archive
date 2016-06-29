@@ -14,7 +14,7 @@
 #include <array>
 #include <cstdio> // for std::printf & std::sprintf
 #include <utility> // for std::pair
-#include "xcorr.h"
+#include "gccphat.h"
 #include <fftw3.h>
 #include "serial/serial.h"
 #include <fstream>
@@ -25,9 +25,6 @@
 
 // Function Prototypes
 bool SerialInit(serial::Serial & sp);
-void MakeXcorPlans(fftw_plan &, fftw_plan &);
-std::pair<double, int> FindMaxCorrPair(fftw_complex *, fftw_complex *, fftw_complex *, fftw_plan &, fftw_plan &);
-void PrintXcorrResult(std::pair<double, int>, int, int);
 
 int main() {
 	// Setup and open the serial port.
@@ -57,42 +54,42 @@ int main() {
 
 	// Since ffts and iffts will always be of the same length and type, create the plans only once to boost efficiency.
     fftw_plan fft, ifft;
-    MakeXcorPlans(fft, ifft);
+    makeGccphatPlans(fft, ifft, NUMSAMPLES_FFT);
 
 	std::pair<double, int> max_corr_pair_12, max_corr_pair_13, max_corr_pair_23;
-	max_corr_pair_12 = FindMaxCorrPair(signal1, signal2, result, fft, ifft);
-	PrintXcorrResult(max_corr_pair_12, 1, 2);
-	max_corr_pair_13 = FindMaxCorrPair(signal1, signal3, result, fft, ifft);
-	PrintXcorrResult(max_corr_pair_13, 1, 3);
-	max_corr_pair_23 = FindMaxCorrPair(signal2, signal3, result, fft, ifft);
-	PrintXcorrResult(max_corr_pair_23, 2, 3);
+	max_corr_pair_12 = gccphat(signal1, signal2, result, NUMSAMPLES_FFT, fft, ifft);
+	printGccphatResult(max_corr_pair_12, 1, 2, FS);
+	max_corr_pair_13 = gccphat(signal1, signal3, result, NUMSAMPLES_FFT, fft, ifft);
+	printGccphatResult(max_corr_pair_13, 1, 3, FS);
+	max_corr_pair_23 = gccphat(signal2, signal3, result, NUMSAMPLES_FFT, fft, ifft);
+	printGccphatResult(max_corr_pair_23, 2, 3, FS);
 	// ***** End DSP Section ***** //
 
 
-	// Benchmark cross correlation
-	/*std::uint64_t avg = 0;
+	// Benchmark gccphat
+	std::uint64_t avg = 0;
 	std::uint32_t numiters = 1000;
 	for(int i=0; i<numiters; ++i) {
 		auto begin = std::chrono::high_resolution_clock::now();
-		xcorr(signala, signalb, result, NUMSAMPLES_FFT, fft, ifft);
+		gccphat(signal1, signal2, result, NUMSAMPLES_FFT, fft, ifft);
 		auto end = std::chrono::high_resolution_clock::now();
 		avg += std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin).count();
 	}
 	std::cout << avg/numiters << " ns (Average of " << numiters << " iterations)" << std::endl;
 
-	// Find the maximum correlation and the associated lag
-	std::pair<double, int> max_corr_pair = std::make_pair(result[0][0],-NUMSAMPLES_FFT+1); // store max corr at first, corresponding lag at second
-	for(int i=0; i<2*NUMSAMPLES_FFT-1; ++i) {
-		if(result[i][0] > max_corr_pair.first) {
-			max_corr_pair.first = result[i][0];
-			max_corr_pair.second = i-NUMSAMPLES_FFT+1; 
-		}
-		output << result[i][0] << "," << i-NUMSAMPLES_FFT+1 << std::endl;
-	}
-	std::cout << "Max correlation is " << max_corr_pair.first << " at a lag of " << max_corr_pair.second << std::endl;
-	if(max_corr_pair.second>0) std::cout << "Thus, signal a leads signal b by " << max_corr_pair.second/FS << " seconds\n";
-	else if(max_corr_pair.second<0) std::cout << "Thus, signal a lags signal b by " << max_corr_pair.second/FS << " seconds\n";
-	else std::cout << "Thus, signals a and b are fully synchronized\n";*/
+	// // Find the maximum correlation and the associated lag
+	// std::pair<double, int> max_corr_pair = std::make_pair(result[0][0],-NUMSAMPLES_FFT+1); // store max corr at first, corresponding lag at second
+	// for(int i=0; i<2*NUMSAMPLES_FFT-1; ++i) {
+	// 	if(result[i][0] > max_corr_pair.first) {
+	// 		max_corr_pair.first = result[i][0];
+	// 		max_corr_pair.second = i-NUMSAMPLES_FFT+1; 
+	// 	}
+	// 	output << result[i][0] << "," << i-NUMSAMPLES_FFT+1 << std::endl;
+	// }
+	// std::cout << "Max correlation is " << max_corr_pair.first << " at a lag of " << max_corr_pair.second << std::endl;
+	// if(max_corr_pair.second>0) std::cout << "Thus, signal a leads signal b by " << max_corr_pair.second/FS << " seconds\n";
+	// else if(max_corr_pair.second<0) std::cout << "Thus, signal a lags signal b by " << max_corr_pair.second/FS << " seconds\n";
+	// else std::cout << "Thus, signals a and b are fully synchronized\n";
 
 	// Clean up
 	fftw_free(signal1);
@@ -245,43 +242,4 @@ bool SerialInit(serial::Serial & sp) {
 		return true;
 	}
 }
-
-void MakeXcorPlans(fftw_plan & fft, fftw_plan & ifft) {
-    fftw_complex * signal_ext = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * NUMSAMPLES_FFT - 1));
-    fftw_complex * out = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * (2 * NUMSAMPLES_FFT - 1));
-
-    fft = fftw_plan_dft_1d(2 * NUMSAMPLES_FFT - 1, signal_ext, out, FFTW_FORWARD, FFTW_MEASURE);
-   	ifft = fftw_plan_dft_1d(2 * NUMSAMPLES_FFT - 1, out, signal_ext, FFTW_BACKWARD, FFTW_MEASURE);
-
-    fftw_free(signal_ext);
-    fftw_free(out);
-}
-
-std::pair<double, int> FindMaxCorrPair(fftw_complex * signala, fftw_complex * signalb, fftw_complex * result, fftw_plan & fft, fftw_plan & ifft) {
-	xcorr(signala, signalb, result, NUMSAMPLES_FFT, fft, ifft);
-
-	std::pair<double, int> max_corr_pair = std::make_pair(result[0][0],-NUMSAMPLES_FFT+1);
-	for(int i=0; i<2*NUMSAMPLES_FFT-1; ++i) {
-		if(result[i][0] > max_corr_pair.first) {
-			max_corr_pair.first = result[i][0];
-			max_corr_pair.second = i-NUMSAMPLES_FFT+1; 
-		}
-	}
-	return max_corr_pair;
-}
-
-void PrintXcorrResult(std::pair<double, int> max_corr_pair, int signum1, int signum2) {
-	std::printf("Max correlation of signals %d and %d is %f at a lag of %d.\n", signum1, signum2, max_corr_pair.first, max_corr_pair.second);
-	if(max_corr_pair.second > 0) 
-		std::printf("Signal %d leads signal %d by %f seconds.\n", signum1, signum2, max_corr_pair.second/FS);
-	else if(max_corr_pair.second < 0)
-		std::printf("Signal %d lags signal %d by %f seconds.\n", signum1, signum2, max_corr_pair.second/FS);
-	else
-		std::printf("Signals %d and %d are fully synchronized.\n", signum1, signum2);
-}
-
-// void parse_serial() {
-	
-// }
-
 // ********** End Helper Functions Section ********** //
