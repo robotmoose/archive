@@ -108,8 +108,8 @@ chatter_t.prototype.create_interval=function()
 							var obj=JSON.parse(data[key]);
 							if(obj.handle&&obj.message&&obj.time)
 							{
-								var time=new Date(obj.time);
-								chat+=obj.handle+"("+time+"):\t"+obj.message+"\n";
+								var time=moment(obj.time).fromNow();
+								chat+=obj.handle+" ("+time+"):\t"+obj.message+"\n";
 							}
 						}
 						catch(error)
