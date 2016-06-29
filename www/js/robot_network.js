@@ -5,25 +5,6 @@ function robot_network_t()
 	this.pilot={};
 	this.intervals=
 	[
-	{
-			int:null,
-			func:function()
-			{
-				if(valid_robot(_this.robot))
-				{
-					superstar_get_multiple
-					(
-						_this.robot,
-						["sensors"],
-						function(json)
-						{
-							_this.sensors=json[0];
-						}
-					);
-				}
-			},
-			ms:150
-		},
 		{
 			int:null,
 			func:function()
@@ -91,4 +72,9 @@ robot_network_t.prototype.destroy=function()
 robot_network_t.prototype.set_robot=function(robot)
 {
 	this.robot=robot;
+	var _this=this;
+	superstar_getnext(this.robot,"sensors",function(json)
+	{
+		_this.sensors=json;
+	});
 }
