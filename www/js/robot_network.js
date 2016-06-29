@@ -5,6 +5,25 @@ function robot_network_t()
 	this.pilot={};
 	this.intervals=
 	[
+	{
+			int:null,
+			func:function()
+			{
+				if(valid_robot(_this.robot))
+				{
+					superstar_get_multiple
+					(
+						_this.robot,
+						["sensors"],
+						function(json)
+						{
+							_this.sensors=json[0];
+						}
+					);
+				}
+			},
+			ms:150
+		},
 		{
 			int:null,
 			func:function()
@@ -16,13 +35,12 @@ function robot_network_t()
 						_this.robot,
 						"pilot",
 						_this.pilot,
-						["active_experiment","config","frontendStatus","sensors"],
+						["active_experiment","config","frontendStatus"],
 						function(json)
 						{
 							_this.active_experiment=json[0];
 							_this.config=json[1];
 							_this.frontendStatus=json[2];
-							_this.sensors=json[3];
 						}
 					);
 				}
