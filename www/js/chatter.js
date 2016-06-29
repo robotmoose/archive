@@ -97,7 +97,7 @@ chatter_t.prototype.create_interval=function()
 		//if(valid_robot(_this.robot))
 			//superstar_generic(_this.robot,"chat","?get",function(data)
 			//{
-				if(_this.history.value!=robot_network.chat)
+				if(robot_network.chat&&_this.history.value!=robot_network.chat)
 				{
 					var data=robot_network.chat.split("\n");
 					var chat="";
