@@ -19,6 +19,7 @@ function robot_menu_t(div)
 	this.div.appendChild(this.element);
 
 	this.menu.nav.className="navbar navbar-default";
+	//this.menu.nav.style.marginTop="50px"
 	this.menu.nav.style.marginBottom=-1;
 	this.menu.nav.style["z-index"]=999;
 	//this.menu.nav.navbar.open.style["margin-bottom"] = ""
@@ -48,8 +49,7 @@ function robot_menu_t(div)
 		this.menu.collapse_btn.appendChild(this.menu.collapse_span[i]);
 
 	this.menu.collapse_div=document.createElement("div");
-	this.menu.collapse_div.className="collapse navbar-collapse in";
-	this.menu.collapse_div.setAttribute("aria-expanded","true");
+	this.menu.collapse_div.className="collapse navbar-collapse";
 	this.menu.collapse_div.id="robot_nav";
 	this.menu.div.appendChild(this.menu.collapse_div);
 

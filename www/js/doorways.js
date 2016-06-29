@@ -67,7 +67,7 @@ function doorways_t(div,menu)
 	if(this.menu_bar)
 	{
 		this.menu.style.borderBottom=0;
-		this.menu.style.height=this.menu_bar.offsetHeight;
+		this.menu.style.height="51px";
 		this.menu_bar.appendChild(this.menu);
 	}
 	else
