@@ -73,9 +73,17 @@ chatter_t.prototype.chat=function(msg)
 {
 	if(valid_robot(this.robot))
 	{
-		var uri="?append="+encodeURIComponent(this.handle+": "+msg)+
-			"&trim="+this.maxlines;
-		superstar_generic(this.robot,"chat",uri);
+		var _this=this;
+		var obj=
+			{
+				handle:this.handle,
+				message:msg,
+				time:(new Date()).getTime()
+			};
+		superstar_append(this.robot,"chat",obj,function()
+		{
+			superstar_trim(_this.robot,"chat",_this.maxlines);
+		});
 	}
 }
 
@@ -91,7 +99,23 @@ chatter_t.prototype.create_interval=function()
 			//{
 				if(_this.history.value!=robot_network.chat)
 				{
-					_this.history.value=robot_network.chat;
+					var data=robot_network.chat.split("\n");
+					var chat="";
+					for(var key in data)
+					{
+						try
+						{
+							var obj=JSON.parse(data[key]);
+							if(obj.handle&&obj.message&&obj.time)
+							{
+								var time=new Date(obj.time);
+								chat+=obj.handle+"("+time+"):\t"+obj.message+"\n";
+							}
+						}
+						catch(error)
+						{}
+					}
+					_this.history.value=chat;
 					_this.history.scrollTop=_this.history.scrollHeight;
 				}
 			//});
