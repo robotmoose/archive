@@ -61,13 +61,13 @@ chart_interface_t.prototype.refresh=function(json) {
 					if(!json[prop].hasOwnProperty(subprop)) {
 						continue;
 					}
-					if(subprop == "servo") {
+					if(subprop == "servo" || subprop == "pwm") {
 						for(i=0; i < json[prop][subprop].length; ++i) {
 							sensor_list.push(subprop + "_" + i);
 							if(this.doesExist(this.charts.data_points[subprop + "_" + i])) {
 								this.charts.data_points[subprop + "_" + i].datasets[0].data.push(json[prop][subprop][i]);
 								this.charts.data_points[subprop + "_" + i].labels.push(0);
-								if(this.charts.data_points[subprop + "_" + i].datasets[0].data.length > 30) {
+								if(this.charts.data_points[subprop + "_" + i].datasets[0].data.length > 60) {
 									this.charts.data_points[subprop + "_" + i].datasets[0].data.shift();
 									this.charts.data_points[subprop + "_" + i].labels.shift();
 								}
@@ -173,7 +173,7 @@ chart_interface_t.prototype.add_chart=function() {
 		switch(_this.chart_drop.value) {
 			case "light":
 				_this.charts.canvas[_this.chart_drop.value].width = 400;
-				_this.charts.canvas[_this.chart_drop.value].height = 300;
+				_this.charts.canvas[_this.chart_drop.value].height = 200;
 				// _this.charts.canvas[_this.chart_drop.value].style="-webkit-transform: rotate(-71deg);"
 				for(i=0; i<6; ++i) {
 					_this.charts.data_points[_this.chart_drop.value].datasets[0].data.push(0);
@@ -224,7 +224,8 @@ chart_interface_t.prototype.add_chart=function() {
 					_this.charts.data_points[_this.chart_drop.value].datasets[0].data.push(0);
 					_this.charts.data_points[_this.chart_drop.value].labels.push(i.toString());
 				}
-				 _this.charts.chart[_this.chart_drop.value] = new Chart(_this.charts.canvas[_this.chart_drop.value].getContext('2d'), {
+				_this.charts.data_points[_this.chart_drop.value].datasets[0].backgroundColor = "#0BB5FF";
+				_this.charts.chart[_this.chart_drop.value] = new Chart(_this.charts.canvas[_this.chart_drop.value].getContext('2d'), {
 					type: 'bar',
 					data: _this.charts.data_points[_this.chart_drop.value],
 					options: {
