@@ -18,6 +18,21 @@ function superstar_error(user_errorhandler,why_string)
 	if (user_errorhandler) user_errorhandler(why_string);
 }
 
+function calc_auth(robot,path,str)
+{
+	var auth=robot.auth;
+	if(!robot.auth)
+		auth="";
+
+	if (robot.auth) {
+		var starpath=superstar_path(robot,path);
+		var seq="0"; // <- fixme: fight replay by getting sequence number from server first
+		auth = "&auth="+getAuthCode(robot.auth,starpath,str,seq);
+		//console.log(path,"Authentication code "+auth);
+	}
+	return auth;
+}
+
 // Build the full request string for this path on this robot
 function superstar_path(robot,path) {
 	var fullpath="robots/";
@@ -86,6 +101,119 @@ function superstar_get(robot,path,on_success,on_error)
 	,on_error);
 }
 
+// Get multiple JSON object from multiple robot paths
+function superstar_get_multiple(robot,paths,on_success,on_error)
+{
+	var request="?get=";
+	for(var ii=0;ii<paths.length;++ii)
+	{
+		request+="/"+superstar_path(robot,paths[ii]);
+		if(ii+1<paths.length)
+			request+=",";
+	}
+
+	var starpath=superstar_path(robot,"");
+	var url="";
+	if (robot.superstar) url="http://"+robot.superstar;
+	url+="/superstar/"+starpath+request;
+
+	try
+	{
+		var xhr=new XMLHttpRequest();
+		xhr.open("GET",url,true);
+		xhr.onreadystatechange=function()
+		{
+			if(xhr.readyState==4)
+			{
+				if(xhr.status==200)
+				{
+					try
+					{
+						//console.log("Network "+url+" -> "+xhr.responseText);
+						if(on_success)
+							on_success(JSON.parse(xhr.responseText));
+					}
+					catch(error)
+					{
+						superstar_error(on_error,"Error handling response \""+xhr.responseText+"\" ("+error+") from "+url);
+					}
+				}
+				else
+				{
+					superstar_error(on_error,"Error receiving from server (status "+xhr.status+") from "+url);
+				}
+			}
+		}
+
+		xhr.send();
+		return xhr;
+	}
+	catch(error)
+	{
+		superstar_error(on_error,"Network error ("+error+") from "+url);
+		return null;
+	}
+}
+
+// Get multiple JSON object from multiple robot paths
+function superstar_set_and_get_multiple(robot,set_path,set_json,get_paths,on_success,on_error)
+{
+	var set_json_str=JSON.stringify(set_json);
+	var request="?set="+set_json_str+"&get=";
+	for(var ii=0;ii<get_paths.length;++ii)
+	{
+		request+="/"+superstar_path(robot,get_paths[ii]);
+		if(ii+1<get_paths.length)
+			request+=",";
+	}
+
+	var auth=calc_auth(robot,set_path,set_json_str);
+
+	request+=auth;
+	var starpath=superstar_path(robot,set_path);
+	var url="";
+	if (robot.superstar) url="http://"+robot.superstar;
+	url+="/superstar/"+starpath+request;
+
+	try
+	{
+		var xhr=new XMLHttpRequest();
+		xhr.open("GET",url,true);
+		xhr.onreadystatechange=function()
+		{
+			if(xhr.readyState==4)
+			{
+				if(xhr.status==200)
+				{
+					try
+					{
+						//console.log("Network "+url+" -> "+xhr.responseText);
+						if(on_success)
+							on_success(JSON.parse(xhr.responseText));
+					}
+					catch(error)
+					{
+						superstar_error(on_error,"Error handling response \""+xhr.responseText+"\" ("+error+") from "+url);
+					}
+				}
+				else
+				{
+					superstar_error(on_error,"Error receiving from server (status "+xhr.status+") from "+url);
+				}
+			}
+		}
+
+		xhr.send();
+		return xhr;
+	}
+	catch(error)
+	{
+		superstar_error(on_error,"Network error ("+error+") from "+url);
+		return null;
+	}
+}
+
+
 // Subscribe to JSON changes at this robot path.
 //  This repeatedly calls on_success with the updated objects
 //  until you call .abort on the object this returns.
@@ -153,19 +281,36 @@ function superstar_getnext(robot,path,on_success,on_error)
 function superstar_set(robot,path,json,on_success,on_error)
 {
 	var json_str=JSON.stringify(json);
-	var auth=robot.auth;
-	if(!robot.auth)
-		auth="";
-
-	if (robot.auth) {
-		var starpath=superstar_path(robot,path);
-		var seq="0"; // <- fixme: fight replay by getting sequence number from server first
-		auth = "&auth="+getAuthCode(robot.auth,starpath,json_str,seq);
-		//console.log(path,"Authentication code "+auth);
-	}
+	var auth=calc_auth(robot,path,json_str);
 
 	json_str=encodeURIComponent(json_str);
 	superstar_generic(robot,path,"?set="+json_str+auth,
+		function(response) {
+			if (on_success) on_success();
+		}
+	,on_error);
+}
+
+// Append this object to this path
+function superstar_append(robot,path,json,on_success,on_error)
+{
+	var json_str=JSON.stringify(json);
+	var auth=calc_auth(robot,path,json_str);
+
+	json_str=encodeURIComponent(json_str);
+	superstar_generic(robot,path,"?append="+json_str+auth,
+		function(response) {
+			if (on_success) on_success();
+		}
+	,on_error);
+}
+
+// Trim this path to this size
+function superstar_trim(robot,path,size,on_success,on_error)
+{
+	var auth=calc_auth(robot,path,size);
+
+	superstar_generic(robot,path,"?trim="+size+auth,
 		function(response) {
 			if (on_success) on_success();
 		}
