@@ -87,6 +87,15 @@ function pilot_interface_t(div)
 	this.mouse_in_div=0;
 	this.keyboardIsDriving=false;
 	this.keyInput=new input_t(function() {myself.pilot_keyboard()},window);
+
+	// Gamepad support
+	if (navigator.getGamepads()[0]) {
+		$.notify({message: 'Gamepad connected.'}, {type: 'success'});
+		myself.gamepad_interval = setInterval(function() {
+			myself.handle_gamepad_input(myself);
+		}, 50);
+	}
+	else this.gamepad_interval = null;
 }
 
 // Configure our pilot GUI for the current firmware setup
@@ -225,6 +234,18 @@ pilot_interface_t.prototype.make_drive=function(config_entry)
 	this.arrowDiv.onmousemove=function(evt) { myself.pilot_mouse(evt,0,0); };
 	this.arrowDiv.ondblclick=function(evt) { myself.pilot_mouse(evt,0,0); };
 
+	// Gamepad event handlers
+	window.addEventListener('gamepadconnected', function(e) {
+		$.notify({message: 'Gamepad connected.'}, {type: 'success'});
+		myself.gamepad_interval = setInterval(function() {
+			myself.handle_gamepad_input(myself);
+		}, 50);
+	});
+	window.addEventListener('gamepaddisconnected', function(e) {
+		$.notify({message: 'Gamepad disconnected.'}, {type: 'danger'});
+		clearInterval(myself.gamepad_interval);
+	});
+
 	// Add arrow image
 	var img=document.createElement("img");
 	img.src="/images/arrows_hard.png";
@@ -362,6 +383,17 @@ pilot_interface_t.prototype.pilot_send=function() {
 	if (this.onpilot) this.onpilot(this.pilot);
 };
 
+pilot_interface_t.prototype.handle_gamepad_input=function(myself) {
+	var axes = navigator.getGamepads()[0].axes;
+	myself.pilot.power.L = 0;
+	myself.pilot.power.R = 0;
+
+	if (Math.abs(axes[1]) > 0.1)
+		myself.pilot.power.L	= 50 * -axes[1];
+	if (Math.abs(axes[3]) > 0.1)
+		myself.pilot.power.R = 50 * -axes[3];
+	myself.pilot_send();
+}
 /*
   This is the real version, with network spam prevention and authentication and such.
 
