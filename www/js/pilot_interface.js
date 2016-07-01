@@ -388,10 +388,24 @@ pilot_interface_t.prototype.handle_gamepad_input=function(myself) {
 	myself.pilot.power.L = 0;
 	myself.pilot.power.R = 0;
 
-	if (Math.abs(axes[1]) > 0.1)
-		myself.pilot.power.L	= 50 * -axes[1];
-	if (Math.abs(axes[3]) > 0.1)
-		myself.pilot.power.R = 50 * -axes[3];
+	if (axes[0] < -0.1) {
+		myself.pilot.power.R += -axes[0];
+	}
+	if (axes[0] > 0.1) {
+		myself.pilot.power.L+= axes[0];
+	}
+	if (axes[1] < -0.1) {
+		myself.pilot.power.L+= -axes[1];
+		myself.pilot.power.R += -axes[1];
+	}
+	if (axes[1] > 0.1) {
+		myself.pilot.power.L+= -axes[1];
+		myself.pilot.power.R += -axes[1];
+	}
+	myself.pilot.power.L*= 50;
+	myself.pilot.power.R *= 50;
+	// console.log(`L: ${myself.pilot.power.L}`);
+	// console.log(`R: ${myself.pilot.power.R}`);
 	myself.pilot_send();
 }
 /*
